@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  frontend:
+    image: node:20-alpine
+    container_name: react_flipdoc_front
+    working_dir: /app
+
+    # Monta o projeto dentro do container
+    volumes:
+      - .:/app
+      - /app/node_modules  # evita conflito com node_modules da máquina
+
+    ports:
+      - "5173:5173"
+
+    command: sh -c "npm install && npm run dev"
+
