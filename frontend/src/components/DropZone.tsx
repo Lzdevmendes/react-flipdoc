@@ -5,7 +5,8 @@ import {
   Button,
   Box,
   Chip,
-  Stack
+  Stack,
+  CircularProgress
 } from '@mui/material'
 import {
   CloudUpload as CloudUploadIcon,
@@ -13,11 +14,17 @@ import {
 } from '@mui/icons-material'
 import { useDragAndDrop } from '../hooks/useDragAndDrop'
 
-export default function DropZone({ onFile }: { onFile: (f: File) => void }) {
+interface DropZoneProps {
+  onFile: (f: File) => void
+  disabled?: boolean
+}
+
+export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
   const { ref, file, setFile, over } = useDragAndDrop()
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return
     const f = e.target.files?.[0]
     if (f) {
       setFile(f)
@@ -28,43 +35,52 @@ export default function DropZone({ onFile }: { onFile: (f: File) => void }) {
   return (
     <Paper
       ref={ref}
-      elevation={over ? 8 : 2}
+      elevation={over && !disabled ? 8 : 2}
       sx={{
         p: 4,
-        border: over ? '2px dashed' : '2px dashed',
-        borderColor: over ? 'primary.main' : 'grey.300',
-        bgcolor: over ? 'primary.50' : 'background.paper',
+        border: '2px dashed',
+        borderColor: disabled ? 'grey.200' : (over ? 'primary.main' : 'grey.300'),
+        bgcolor: disabled ? 'grey.100' : (over ? 'primary.50' : 'background.paper'),
         transition: 'all 0.3s ease',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         textAlign: 'center',
+        opacity: disabled ? 0.6 : 1,
         '&:hover': {
-          borderColor: 'primary.light',
-          bgcolor: 'grey.50',
+          borderColor: disabled ? 'grey.200' : 'primary.light',
+          bgcolor: disabled ? 'grey.100' : 'grey.50',
         },
       }}
-      onClick={() => inputRef.current?.click()}
+      onClick={() => !disabled && inputRef.current?.click()}
     >
       <Stack spacing={2} alignItems="center">
-        <CloudUploadIcon sx={{ fontSize: 64, color: over ? 'primary.main' : 'grey.400' }} />
+        {disabled ? (
+          <CircularProgress size={64} />
+        ) : (
+          <CloudUploadIcon sx={{ fontSize: 64, color: over ? 'primary.main' : 'grey.400' }} />
+        )}
 
         <Typography variant="h6" color="text.primary">
-          Arraste seu documento aqui
+          {disabled ? 'Enviando arquivo...' : 'Arraste seu documento aqui'}
         </Typography>
 
-        <Typography variant="body2" color="text.secondary">
-          ou
-        </Typography>
+        {!disabled && (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              ou
+            </Typography>
 
-        <Button
-          variant="contained"
-          startIcon={<CloudUploadIcon />}
-          onClick={(e) => {
-            e.stopPropagation()
-            inputRef.current?.click()
-          }}
-        >
-          Selecionar arquivo
-        </Button>
+            <Button
+              variant="contained"
+              startIcon={<CloudUploadIcon />}
+              onClick={(e) => {
+                e.stopPropagation()
+                inputRef.current?.click()
+              }}
+            >
+              Selecionar arquivo
+            </Button>
+          </>
+        )}
 
         <input
           ref={inputRef}
@@ -72,6 +88,7 @@ export default function DropZone({ onFile }: { onFile: (f: File) => void }) {
           accept=".doc,.docx,.pdf,.md,.txt"
           style={{ display: 'none' }}
           onChange={handleFileChange}
+          disabled={disabled}
         />
 
         <Box>

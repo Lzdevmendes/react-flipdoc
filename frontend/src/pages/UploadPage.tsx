@@ -25,7 +25,7 @@ import { usePolling } from '../hooks/usePolling'
 
 export default function UploadPage() {
   const [targetFormat, setTargetFormat] = useState<TargetFormat>('pdf')
-  const { jobId, status, error, startConversion, checkStatus } = useConversion()
+  const { jobId, status, error, isUploading, startConversion, checkStatus } = useConversion()
 
   usePolling(
     async () => {
@@ -71,13 +71,14 @@ export default function UploadPage() {
         <FormatSelector
           value={targetFormat}
           onChange={setTargetFormat}
-          disabled={!!jobId && status !== 'done' && status !== 'failed'}
+          disabled={isUploading || (!!jobId && status !== 'done' && status !== 'failed')}
         />
       </Paper>
 
       {/* Área de Upload */}
       <DropZone
         onFile={(file) => startConversion(file, targetFormat)}
+        disabled={isUploading}
       />
 
       {/* Status da Conversão */}
