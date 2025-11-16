@@ -4,6 +4,11 @@ import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 import fs from 'fs'
 import { jobsRepository } from '../db/jobsRepository'
+import { redis } from '../redis/client'
+import { validateFile } from '../middlewares/fileValidation'
+
+// Nome da fila Redis
+const QUEUE_KEY = 'convert:queue'
 
 // Storage temporário local
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads')
@@ -21,7 +26,7 @@ const router = express.Router()
  * POST /api/convert
  * Upload de arquivo e criação de job de conversão
  */
-router.post('/convert', upload.single('file'), async (req, res) => {
+router.post('/convert', upload.single('file'), validateFile, async (req, res) => {
   try {
     const file = req.file
     const target = req.body.target || 'pdf'
@@ -42,8 +47,14 @@ router.post('/convert', upload.single('file'), async (req, res) => {
 
     console.log(`✅ Job criado: ${jobId} - ${file.originalname} → ${target}`)
 
-    // TODO: Em produção, push para fila Redis para processamento assíncrono
-    // Example: await redis.lpush('convert:queue', JSON.stringify({ jobId }))
+    // Adicionar job à fila Redis para processamento assíncrono
+    try {
+      await redis.lpush(QUEUE_KEY, JSON.stringify({ jobId }))
+      console.log(`📬 Job ${jobId} adicionado à fila de processamento`)
+    } catch (redisError) {
+      console.error('⚠️ Erro ao adicionar job à fila Redis:', redisError)
+      // Continua mesmo se Redis falhar - job fica pendente no BD
+    }
 
     return res.json({ jobId: job.id })
   } catch (error) {

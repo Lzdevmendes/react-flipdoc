@@ -92,6 +92,14 @@ cd bff
 npm run dev
 ```
 
+#### Terminal 3 - Worker de Conversão (OBRIGATÓRIO)
+```bash
+cd bff
+npm run dev:worker
+```
+
+**⚠️ IMPORTANTE:** O worker é necessário para processar as conversões de arquivos. Sem ele, os jobs ficarão em status "pending" indefinidamente.
+
 ### 5. Acessar aplicação
 - **Frontend:** http://localhost:5173
 - **BFF API:** http://localhost:4000
@@ -241,8 +249,10 @@ npm run build  # Verificar erros de TypeScript
 
 ### BFF
 - `npm run dev` - Servidor de desenvolvimento (hot reload)
+- `npm run dev:worker` - Worker de conversão (desenvolvimento)
 - `npm run build` - Compilar TypeScript
 - `npm start` - Rodar versão compilada
+- `npm start:worker` - Worker de conversão (produção)
 
 ## 🗺️ Roadmap
 
@@ -258,16 +268,26 @@ npm run build  # Verificar erros de TypeScript
 - [x] Repository pattern
 - [x] Docker Compose completo
 
-### 🔜 Próximas Etapas (Semana 3)
-- [ ] Remover jQuery e LegacyUploader
-- [ ] Refatorar HistoryPage com MUI
-- [ ] Implementar filtros e busca
+### ✅ Completo (Semana 3)
+- [x] Remover jQuery e LegacyUploader
+- [x] Refatorar HistoryPage com MUI Table
+- [x] Implementar filtros e busca em tempo real
+- [x] Adicionar ordenação de colunas
+- [x] Auto-refresh a cada 5s
 
-### 🔜 Futuro (Semana 4+)
-- [ ] Worker para processar conversões
-- [ ] Filas com Redis
+### 🚧 Em Progresso (Semana 4)
+- [x] Worker para processar conversões (LibreOffice)
+- [x] Filas com Redis (LPUSH/BRPOP)
+- [x] Integração worker + PostgreSQL
+- [ ] Seletor de formato de conversão
+- [ ] Validação de tipos de arquivo
+- [ ] Progress bar em tempo real
+- [ ] Toast notifications
+
+### 🔜 Futuro (Semana 5+)
 - [ ] Suporte a múltiplos formatos (MD, TXT, imagens)
 - [ ] Preview de documentos no navegador
+- [ ] Conversão em lote
 - [ ] Autenticação de usuários
 
 ## 🐛 Troubleshooting
@@ -298,6 +318,36 @@ netstat -ano | findstr :5173   # Windows
 1. Verificar CORS no `bff/src/server.ts`
 2. Verificar proxy no `frontend/vite.config.ts`
 3. Verificar se BFF está rodando na porta 4000
+
+### Jobs ficam em "pending" para sempre
+**Causa:** Worker de conversão não está rodando.
+
+**Solução:**
+```bash
+# Abrir novo terminal
+cd bff
+npm run dev:worker
+```
+
+**Verificar:**
+- Deve aparecer: "🚀 Worker de conversão iniciado e aguardando jobs..."
+- Ao fazer upload, deve aparecer: "📬 Recebido job {id} da fila"
+- Redis deve estar rodando (porta 6379)
+
+### Erro: "libreoffice: command not found"
+**Causa:** LibreOffice não está instalado no sistema.
+
+**Solução:**
+```bash
+# Ubuntu/Debian
+sudo apt-get update && sudo apt-get install -y libreoffice
+
+# macOS
+brew install --cask libreoffice
+
+# Windows
+# Baixar e instalar de: https://www.libreoffice.org/download/download/
+```
 
 ## 📄 Licença
 

@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:worker": "tsx watch src/workers/convertWorker.ts",
     "start": "node dist/server.js",
+    "start:worker": "node dist/workers/convertWorker.js",
     "build": "tsc"
   },
   "dependencies": {

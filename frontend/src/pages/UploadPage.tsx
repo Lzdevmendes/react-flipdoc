@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Typography,
@@ -19,10 +19,12 @@ import {
   Pending as PendingIcon
 } from '@mui/icons-material'
 import DropZone from '../components/DropZone'
+import FormatSelector, { TargetFormat } from '../components/FormatSelector'
 import { useConversion } from '../hooks/useConversion'
 import { usePolling } from '../hooks/usePolling'
 
 export default function UploadPage() {
+  const [targetFormat, setTargetFormat] = useState<TargetFormat>('pdf')
   const { jobId, status, error, startConversion, checkStatus } = useConversion()
 
   usePolling(
@@ -61,11 +63,21 @@ export default function UploadPage() {
         Faça upload de seus documentos e converta entre PDF, DOCX e outros formatos
       </Typography>
 
+      {/* Seletor de Formato */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+          Formato de Destino
+        </Typography>
+        <FormatSelector
+          value={targetFormat}
+          onChange={setTargetFormat}
+          disabled={!!jobId && status !== 'done' && status !== 'failed'}
+        />
+      </Paper>
+
+      {/* Área de Upload */}
       <DropZone
-        onFile={(file) => startConversion(
-          file,
-          file.name.endsWith('.pdf') ? 'docx' : 'pdf'
-        )}
+        onFile={(file) => startConversion(file, targetFormat)}
       />
 
       {/* Status da Conversão */}
