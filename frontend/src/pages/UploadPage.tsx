@@ -68,19 +68,6 @@ export default function UploadPage() {
         )}
       />
 
-      {/* Uploader Legado - SERÁ REMOVIDO NA SEMANA 3 */}
-      <Paper sx={{ p: 2, mt: 3, bgcolor: 'warning.50', border: '1px solid', borderColor: 'warning.200' }}>
-        <Typography variant="subtitle2" gutterBottom color="warning.dark">
-          ⚠️ Uploader Legado (jQuery) - Será removido em breve
-        </Typography>
-        <LegacyUploader
-          onFile={(file) => startConversion(
-            file,
-            file.name.endsWith('.pdf') ? 'docx' : 'pdf'
-          )}
-        />
-      </Paper>
-
       {/* Status da Conversão */}
       {jobId && (
         <Card sx={{ mt: 3 }}>
