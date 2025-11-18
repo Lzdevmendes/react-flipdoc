@@ -4,8 +4,29 @@ import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 import fs from 'fs'
 import { jobsRepository } from '../db/jobsRepository'
+import { inMemoryJobsRepository } from '../db/inMemoryRepository'
 import { redis } from '../redis/client'
 import { validateFile } from '../middlewares/fileValidation'
+
+// Usar repositório em memória se PostgreSQL não estiver disponível
+let useInMemory = false
+
+// Helper para obter o repositório correto
+const getRepository = () => {
+  return useInMemory ? inMemoryJobsRepository : jobsRepository
+}
+
+// Verificar conexão do banco na inicialização
+import { pool } from '../db/client'
+pool.query('SELECT NOW()')
+  .then(() => {
+    console.log('✅ PostgreSQL conectado - usando banco de dados')
+    useInMemory = false
+  })
+  .catch(() => {
+    console.log('⚠️ PostgreSQL não disponível - usando armazenamento em memória')
+    useInMemory = true
+  })
 
 // Nome da fila Redis
 const QUEUE_KEY = 'convert:queue'
@@ -37,8 +58,9 @@ router.post('/convert', upload.single('file'), validateFile, async (req, res) =>
 
     const jobId = uuidv4()
 
-    // Criar job no banco de dados
-    const job = await jobsRepository.create({
+    // Criar job no banco de dados ou em memória
+    const repo = getRepository()
+    const job = await repo.create({
       id: jobId,
       original_name: file.originalname,
       file_path: file.path,
@@ -69,7 +91,8 @@ router.post('/convert', upload.single('file'), validateFile, async (req, res) =>
  */
 router.get('/jobs/:id/status', async (req, res) => {
   try {
-    const job = await jobsRepository.findById(req.params.id)
+    const repo = getRepository()
+    const job = await repo.findById(req.params.id)
 
     if (!job) {
       return res.status(404).json({ error: 'Job not found' })
@@ -94,8 +117,9 @@ router.get('/jobs', async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 100
     const offset = parseInt(req.query.offset as string) || 0
 
-    const jobs = await jobsRepository.findAll(limit, offset)
-    const total = await jobsRepository.count()
+    const repo = getRepository()
+    const jobs = await repo.findAll(limit, offset)
+    const total = await repo.count()
 
     return res.json({
       jobs,
@@ -115,7 +139,8 @@ router.get('/jobs', async (req, res) => {
  */
 router.get('/jobs/:id/download', async (req, res) => {
   try {
-    const job = await jobsRepository.findById(req.params.id)
+    const repo = getRepository()
+    const job = await repo.findById(req.params.id)
 
     if (!job) {
       return res.status(404).send('Job not found')
@@ -144,7 +169,8 @@ router.patch('/jobs/:id', async (req, res) => {
   try {
     const { status, download_path, download_name, error_message } = req.body
 
-    const updatedJob = await jobsRepository.update(req.params.id, {
+    const repo = getRepository()
+    const updatedJob = await repo.update(req.params.id, {
       status,
       download_path,
       download_name,
