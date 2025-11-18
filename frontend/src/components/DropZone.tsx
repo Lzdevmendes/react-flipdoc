@@ -35,19 +35,25 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
   return (
     <Paper
       ref={ref}
-      elevation={over && !disabled ? 8 : 2}
+      elevation={over && !disabled ? 12 : 3}
       sx={{
-        p: 4,
-        border: '2px dashed',
+        p: 6,
+        border: '3px dashed',
         borderColor: disabled ? 'grey.200' : (over ? 'primary.main' : 'grey.300'),
         bgcolor: disabled ? 'grey.100' : (over ? 'primary.50' : 'background.paper'),
-        transition: 'all 0.3s ease',
+        background: over && !disabled
+          ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
+          : disabled ? 'grey.100' : 'background.paper',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: disabled ? 'not-allowed' : 'pointer',
         textAlign: 'center',
         opacity: disabled ? 0.6 : 1,
+        transform: over && !disabled ? 'scale(1.02)' : 'scale(1)',
         '&:hover': {
-          borderColor: disabled ? 'grey.200' : 'primary.light',
+          borderColor: disabled ? 'grey.200' : 'primary.main',
           bgcolor: disabled ? 'grey.100' : 'grey.50',
+          transform: disabled ? 'scale(1)' : 'scale(1.01)',
+          boxShadow: disabled ? 'none' : '0 8px 24px rgba(102, 126, 234, 0.2)',
         },
       }}
       onClick={() => !disabled && inputRef.current?.click()}

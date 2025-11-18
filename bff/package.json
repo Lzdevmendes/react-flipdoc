@@ -5,8 +5,12 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "dev:worker": "tsx watch src/workers/convertWorker.ts",
+    "dev:worker:simple": "tsx watch src/workers/simpleWorker.ts",
+    "dev:worker:mock": "tsx watch src/workers/mockWorker.ts",
     "start": "node dist/server.js",
     "start:worker": "node dist/workers/convertWorker.js",
+    "start:worker:simple": "node dist/workers/simpleWorker.js",
+    "start:worker:mock": "node dist/workers/mockWorker.js",
     "build": "tsc"
   },
   "dependencies": {

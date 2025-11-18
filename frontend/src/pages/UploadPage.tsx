@@ -91,12 +91,24 @@ export default function UploadPage() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom fontWeight={700}>
-        Converter Documentos
-      </Typography>
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Faça upload de seus documentos e converta entre PDF, DOCX e outros formatos
-      </Typography>
+      {/* Header com Gradiente */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: 4,
+          p: 4,
+          mb: 4,
+          color: 'white',
+          boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)',
+        }}
+      >
+        <Typography variant="h3" gutterBottom fontWeight={800}>
+          ✨ Conversor de Documentos
+        </Typography>
+        <Typography variant="h6" sx={{ opacity: 0.95 }}>
+          Transforme seus arquivos entre PDF, DOCX, TXT e outros formatos em segundos
+        </Typography>
+      </Box>
 
       {/* Seletor de Formato */}
       {!selectedFile && (
@@ -122,8 +134,15 @@ export default function UploadPage() {
 
       {/* Preview do Arquivo Selecionado */}
       {selectedFile && !jobId && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
+        <Card
+          sx={{
+            mb: 3,
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+            borderRadius: 3,
+          }}
+        >
+          <CardContent sx={{ p: 4 }}>
             <Stack spacing={3}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6" fontWeight={600}>
@@ -153,28 +172,48 @@ export default function UploadPage() {
               <Paper
                 elevation={0}
                 sx={{
-                  p: 3,
-                  bgcolor: 'primary.50',
-                  border: '2px solid',
-                  borderColor: 'primary.200'
+                  p: 4,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: '3px solid',
+                  borderColor: 'white',
+                  borderRadius: 3,
+                  boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
                 }}
               >
-                <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
+                <Stack direction="row" spacing={3} alignItems="center" justifyContent="center">
                   <Chip
                     label={getFileFormat(selectedFile.name)}
-                    color="primary"
-                    size="medium"
-                    sx={{ fontSize: '1rem', fontWeight: 600, px: 2, py: 2.5 }}
+                    sx={{
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      px: 3,
+                      py: 3,
+                      bgcolor: 'white',
+                      color: 'primary.main',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    }}
                   />
-                  <TransformIcon sx={{ fontSize: 32, color: 'primary.main' }} />
+                  <TransformIcon sx={{ fontSize: 48, color: 'white', animation: 'pulse 2s infinite' }} />
                   <Chip
                     label={targetFormat.toUpperCase()}
-                    color="secondary"
-                    size="medium"
-                    sx={{ fontSize: '1rem', fontWeight: 600, px: 2, py: 2.5 }}
+                    sx={{
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      px: 3,
+                      py: 3,
+                      bgcolor: 'white',
+                      color: 'secondary.main',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    }}
                   />
                 </Stack>
-                <Typography variant="caption" color="text.secondary" textAlign="center" display="block" mt={2}>
+                <Typography
+                  variant="body1"
+                  textAlign="center"
+                  display="block"
+                  mt={2}
+                  sx={{ color: 'white', fontWeight: 500 }}
+                >
                   Converter de {getFileFormat(selectedFile.name)} para {targetFormat.toUpperCase()}
                 </Typography>
               </Paper>
@@ -199,9 +238,24 @@ export default function UploadPage() {
                 startIcon={<TransformIcon />}
                 onClick={handleConvert}
                 disabled={isUploading}
-                sx={{ py: 1.5, fontSize: '1rem' }}
+                sx={{
+                  py: 2,
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 12px 32px rgba(102, 126, 234, 0.5)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  },
+                }}
               >
-                {isUploading ? 'Iniciando conversão...' : 'Converter Arquivo'}
+                {isUploading ? 'Iniciando conversão...' : '🚀 Converter Arquivo Agora'}
               </Button>
             </Stack>
           </CardContent>
@@ -210,49 +264,114 @@ export default function UploadPage() {
 
       {/* Status da Conversão */}
       {jobId && (
-        <Card sx={{ mt: 3 }}>
-          <CardContent>
-            <Stack spacing={2}>
+        <Card
+          sx={{
+            mt: 3,
+            background: status === 'done'
+              ? 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
+              : status === 'failed'
+              ? 'linear-gradient(135deg, #eb3349 0%, #f45c43 100%)'
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+            borderRadius: 3,
+            animation: 'slideInUp 0.6s ease-out',
+          }}
+        >
+          <CardContent sx={{ p: 4 }}>
+            <Stack spacing={3}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">
-                  Status da Conversão
+                <Typography variant="h5" fontWeight={700} sx={{ color: 'white' }}>
+                  {status === 'done' ? '✅ Conversão Concluída!' :
+                   status === 'failed' ? '❌ Conversão Falhou' :
+                   '⚙️ Processando Conversão'}
                 </Typography>
                 <Chip
-                  label={status}
-                  color={getStatusColor() as any}
+                  label={status === 'done' ? 'Concluído' :
+                         status === 'failed' ? 'Falhou' :
+                         status === 'processing' ? 'Processando' : 'Pendente'}
                   icon={getStatusIcon()}
-                  size="medium"
+                  sx={{
+                    bgcolor: 'white',
+                    color: status === 'done' ? '#11998e' :
+                           status === 'failed' ? '#eb3349' : '#667eea',
+                    fontWeight: 700,
+                    px: 2,
+                    py: 2.5,
+                  }}
                 />
               </Box>
 
-              <Divider />
+              <Divider sx={{ bgcolor: 'rgba(255,255,255,0.3)' }} />
 
               <Box>
-                <Typography variant="caption" color="text.secondary">
-                  Job ID
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                  ID da Conversão
                 </Typography>
-                <Typography variant="body2" fontFamily="monospace" sx={{ wordBreak: 'break-all' }}>
+                <Typography
+                  variant="body2"
+                  fontFamily="monospace"
+                  sx={{
+                    wordBreak: 'break-all',
+                    color: 'white',
+                    bgcolor: 'rgba(255,255,255,0.2)',
+                    p: 1,
+                    borderRadius: 1,
+                    mt: 0.5,
+                  }}
+                >
                   {jobId}
                 </Typography>
               </Box>
 
               {(status === 'processing' || status === 'pending') && (
                 <Box>
-                  <LinearProgress />
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    Processando seu documento...
+                  <LinearProgress
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      bgcolor: 'rgba(255,255,255,0.3)',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: 'white',
+                      },
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 2,
+                      display: 'block',
+                      color: 'white',
+                      fontWeight: 500,
+                      textAlign: 'center',
+                    }}
+                  >
+                    ⏳ Convertendo seu documento... Aguarde alguns segundos
                   </Typography>
                 </Box>
               )}
 
               {status === 'done' && (
-                <Alert severity="success" icon={<CheckIcon />}>
-                  Conversão concluída com sucesso!
+                <Alert
+                  severity="success"
+                  icon={<CheckIcon />}
+                  sx={{
+                    bgcolor: 'rgba(255,255,255,0.95)',
+                    fontWeight: 600,
+                  }}
+                >
+                  Seu arquivo foi convertido com sucesso e está pronto para download!
                 </Alert>
               )}
 
               {error && (
-                <Alert severity="error" icon={<ErrorIcon />}>
+                <Alert
+                  severity="error"
+                  icon={<ErrorIcon />}
+                  sx={{
+                    bgcolor: 'rgba(255,255,255,0.95)',
+                    fontWeight: 600,
+                  }}
+                >
                   {error}
                 </Alert>
               )}
@@ -265,16 +384,37 @@ export default function UploadPage() {
                     startIcon={<DownloadIcon />}
                     href={`/api/jobs/${jobId}/download`}
                     fullWidth
+                    sx={{
+                      bgcolor: 'white',
+                      color: '#11998e',
+                      fontWeight: 700,
+                      py: 2,
+                      fontSize: '1.1rem',
+                      '&:hover': {
+                        bgcolor: 'rgba(255,255,255,0.9)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                      },
+                    }}
                   >
-                    Baixar arquivo convertido
+                    📥 Baixar Arquivo Convertido
                   </Button>
                   <Button
                     variant="outlined"
                     size="large"
                     onClick={() => window.location.reload()}
                     fullWidth
+                    sx={{
+                      borderColor: 'white',
+                      color: 'white',
+                      fontWeight: 600,
+                      '&:hover': {
+                        borderColor: 'white',
+                        bgcolor: 'rgba(255,255,255,0.1)',
+                      },
+                    }}
                   >
-                    Converter outro arquivo
+                    🔄 Converter Outro Arquivo
                   </Button>
                 </Stack>
               )}

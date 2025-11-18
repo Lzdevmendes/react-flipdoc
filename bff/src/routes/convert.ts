@@ -69,13 +69,13 @@ router.post('/convert', upload.single('file'), validateFile, async (req, res) =>
 
     console.log(`✅ Job criado: ${jobId} - ${file.originalname} → ${target}`)
 
-    // Adicionar job à fila Redis para processamento assíncrono
+    // Tentar adicionar job à fila Redis (se disponível)
     try {
       await redis.lpush(QUEUE_KEY, JSON.stringify({ jobId }))
-      console.log(`📬 Job ${jobId} adicionado à fila de processamento`)
+      console.log(`📬 Job ${jobId} adicionado à fila Redis`)
     } catch (redisError) {
-      console.error('⚠️ Erro ao adicionar job à fila Redis:', redisError)
-      // Continua mesmo se Redis falhar - job fica pendente no BD
+      // Redis não disponível - worker simples vai processar via polling
+      console.log(`⚠️ Redis não disponível - job será processado via polling`)
     }
 
     return res.json({ jobId: job.id })
