@@ -29,6 +29,16 @@ Sistema de conversão de documentos entre múltiplos formatos (PDF, DOCX, Markdo
 - **pg** - Driver PostgreSQL
 - **tsx** - TypeScript runtime
 
+### Bibliotecas de Conversão
+- **pdf-parse** - Extração de texto de PDF
+- **pdf-lib** - Manipulação e criação de PDF
+- **docx** - Criação de arquivos DOCX
+- **mammoth** - DOCX para HTML/texto
+- **html-pdf-node** - HTML para PDF
+- **sharp** - Processamento de imagens
+- **marked** - Markdown para HTML
+- **turndown** - HTML para Markdown
+
 ## 🚀 Instalação Local
 
 ### Pré-requisitos
@@ -94,42 +104,39 @@ npm run dev
 
 #### Terminal 3 - Worker de Conversão (OBRIGATÓRIO)
 
-**Escolha UMA das opções abaixo:**
-
-**Opção A - Mock Worker (SEM LibreOffice)** ⭐⭐ MAIS RECOMENDADO - Apenas para testar o fluxo
-```bash
-cd bff
-npm run dev:worker:mock
-```
-- ✅ Funciona sem PostgreSQL
-- ✅ Funciona sem Redis
-- ✅ Funciona sem LibreOffice
-- ✅ Usa armazenamento em memória
-- 🎭 **SIMULA conversão** (copia arquivo, não converte de verdade)
-- 🔄 Verifica jobs pendentes a cada 2 segundos
-- ⚠️ **Apenas para teste** - não converte arquivos reais
-
-**Opção B - Worker Simples (COM LibreOffice, SEM PostgreSQL/Redis)** ⭐ RECOMENDADO para desenvolvimento
+**Worker com Conversão Real:**
 ```bash
 cd bff
 npm run dev:worker:simple
 ```
-- ✅ Funciona sem PostgreSQL
-- ✅ Funciona sem Redis
-- ✅ Usa armazenamento em memória
-- ⚠️ Requer LibreOffice instalado
-- 📄 Converte arquivos de verdade
-- 🔄 Verifica jobs pendentes a cada 2 segundos
 
-**Opção C - Worker Completo (COM PostgreSQL/Redis/LibreOffice)**
-```bash
-cd bff
-npm run dev:worker
-```
-- ⚠️ Requer PostgreSQL rodando
-- ⚠️ Requer Redis rodando
-- ⚠️ Requer LibreOffice instalado
-- ⚠️ Apenas para produção ou Docker
+**Características:**
+- ✅ Funciona sem PostgreSQL (usa memória)
+- ✅ Funciona sem Redis (polling)
+- ✅ **Converte arquivos REALMENTE** usando:
+  - `pdf-parse` + `docx` para PDF → TXT/DOCX/MD
+  - `mammoth` + `html-pdf-node` para DOCX → PDF/TXT/MD
+  - `sharp` + `pdf-lib` para Imagens → PDF
+  - `marked` + `turndown` para Markdown ↔ HTML/PDF/DOCX
+  - Conversões completas entre TXT, PDF, DOCX, MD
+- 🔄 Verifica jobs a cada 2 segundos
+
+**Conversões Suportadas:**
+
+**PDF:**
+- PDF → TXT, DOCX, DOC, MD
+
+**DOCX/DOC:**
+- DOCX/DOC → PDF, TXT, MD
+
+**TXT:**
+- TXT → PDF, DOCX, DOC, MD
+
+**Markdown:**
+- MD → PDF, DOCX, DOC, HTML, TXT
+
+**Imagens:**
+- JPG/PNG/WEBP/GIF/BMP → PDF
 
 **⚠️ IMPORTANTE:** O worker é necessário para processar as conversões de arquivos. Sem ele, os jobs ficarão em status "pending" indefinidamente.
 
@@ -355,64 +362,25 @@ netstat -ano | findstr :5173   # Windows
 ### Jobs ficam em "pending" ou "processing" infinitamente
 **Causa:** Worker de conversão não está rodando.
 
-**Solução 1 - MOCK Worker (Testar sem LibreOffice):** ⭐ MAIS FÁCIL
+**Solução:**
 ```bash
-# Abrir novo terminal (Terminal 3)
-cd bff
-npm run dev:worker:mock
-```
-
-**Verificar:**
-- Deve aparecer: "🎭 MOCK WORKER - Simulação de Conversão"
-- Deve aparecer: "⚠️ Este worker NÃO converte arquivos de verdade!"
-- Ao fazer upload, deve aparecer: "📬 Encontrados X job(s) pendente(s)"
-- Após 3 segundos: "✅ [MOCK] [jobId] Conversão SIMULADA concluída"
-- **IMPORTANTE:** O arquivo baixado será uma cópia do original, não conversão real
-
-**Solução 2 - Worker Simples (COM LibreOffice):**
-```bash
-# Abrir novo terminal (Terminal 3)
 cd bff
 npm run dev:worker:simple
 ```
 
 **Verificar:**
-- Deve aparecer: "🚀 Worker Simples iniciado (modo polling)"
+- Deve aparecer: "🚀 Worker de Conversão Iniciado"
 - Deve aparecer: "⚠️ Worker usando armazenamento em memória"
-- Ao fazer upload, deve aparecer: "📬 Encontrados X job(s) pendente(s)"
-- Após conversão: "✅ [jobId] Conversão concluída"
+- Ao fazer upload, deve aparecer: "📬 X job(s) pendente(s)"
+- Durante conversão: "🔄 [jobId] Convertendo: arquivo.docx (docx → pdf)"
+- Após conversão: "✅ [jobId] Conversão concluída: arquivo.pdf"
 
-**Solução 3 - Worker Completo (Docker/Produção):**
-```bash
-# Abrir novo terminal
-cd bff
-npm run dev:worker
-```
-
-**Verificar:**
-- Deve aparecer: "🚀 Worker de conversão iniciado e aguardando jobs..."
-- Ao fazer upload, deve aparecer: "📬 Recebido job {id} da fila"
-- Redis deve estar rodando (porta 6379)
-
-**⚠️ IMPORTANTE:**
-- Se você NÃO tem LibreOffice, use `npm run dev:worker:mock`
-- Se você tem LibreOffice mas não tem Docker, use `npm run dev:worker:simple`
-- Se você tem Docker, use `npm run dev:worker`
-
-### Erro: "libreoffice: command not found"
-**Causa:** LibreOffice não está instalado no sistema.
-
-**Solução:**
-```bash
-# Ubuntu/Debian
-sudo apt-get update && sudo apt-get install -y libreoffice
-
-# macOS
-brew install --cask libreoffice
-
-# Windows
-# Baixar e instalar de: https://www.libreoffice.org/download/download/
-```
+**⚠️ IMPORTANTE:** O worker usa conversão REAL com bibliotecas especializadas:
+- `pdf-parse` + `docx` para PDF → TXT/DOCX/MD
+- `mammoth` + `html-pdf-node` + `turndown` para DOCX ↔ PDF/TXT/MD
+- `sharp` + `pdf-lib` para imagens → PDF
+- `marked` para Markdown → HTML/PDF/DOCX
+- Suporta conversões bidirecionais entre TXT, PDF, DOCX e Markdown
 
 ## 📄 Licença
 
