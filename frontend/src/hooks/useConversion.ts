@@ -76,5 +76,12 @@ export function useConversion() {
     }
   }, [jobId, status, enqueueSnackbar])
 
-  return { jobId, status, error, isUploading, startConversion, checkStatus }
+  const reset = useCallback(() => {
+    setJobId(null)
+    setStatus(null)
+    setError(null)
+    setIsUploading(false)
+  }, [])
+
+  return { jobId, status, error, isUploading, startConversion, checkStatus, reset }
 }

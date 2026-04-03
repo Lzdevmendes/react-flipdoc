@@ -73,7 +73,7 @@ function FileFormatBadge({ label, ext }: { label: string; ext: string }) {
 export default function UploadPage() {
   const [targetFormat, setTargetFormat] = useState<TargetFormat>('pdf')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const { jobId, status, error, isUploading, startConversion, checkStatus } = useConversion()
+  const { jobId, status, error, isUploading, startConversion, checkStatus, reset } = useConversion()
 
   usePolling(
     async () => {
@@ -86,6 +86,7 @@ export default function UploadPage() {
   const handleFileSelect = (file: File) => setSelectedFile(file)
   const handleConvert = () => { if (selectedFile) startConversion(selectedFile, targetFormat) }
   const handleReset = () => setSelectedFile(null)
+  const handleNewConversion = () => { reset(); setSelectedFile(null) }
 
   const srcExt = selectedFile ? getExt(selectedFile.name) : ''
   const srcLabel = srcExt.toUpperCase()
@@ -420,7 +421,28 @@ export default function UploadPage() {
               </Alert>
             )}
 
-            {/* Ações */}
+            {/* Ações: falha */}
+            {status === 'failed' && (
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<RefreshIcon />}
+                onClick={handleNewConversion}
+                fullWidth
+                sx={{
+                  py: 1.5,
+                  fontSize: '0.875rem',
+                  borderColor: '#FECACA',
+                  color: '#DC2626',
+                  borderRadius: '10px',
+                  '&:hover': { borderColor: '#DC2626', bgcolor: '#FEF2F2' },
+                }}
+              >
+                Tentar novamente
+              </Button>
+            )}
+
+            {/* Ações: sucesso */}
             {status === 'done' && jobId && (
               <Stack spacing={1.5}>
                 <Button
@@ -443,7 +465,7 @@ export default function UploadPage() {
                   variant="outlined"
                   size="large"
                   startIcon={<RefreshIcon />}
-                  onClick={() => window.location.reload()}
+                  onClick={handleNewConversion}
                   fullWidth
                   sx={{
                     py: 1.5,
