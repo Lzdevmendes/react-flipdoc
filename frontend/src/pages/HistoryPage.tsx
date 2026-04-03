@@ -16,22 +16,21 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   Stack,
   IconButton,
   Tooltip,
   CircularProgress,
   Alert,
-  TableSortLabel
+  TableSortLabel,
+  InputAdornment
 } from '@mui/material'
 import {
   Download as DownloadIcon,
   Refresh as RefreshIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
 } from '@mui/icons-material'
 import axios from 'axios'
 
-// Tipos
 type JobStatus = 'pending' | 'processing' | 'done' | 'failed'
 
 interface Job {
@@ -50,26 +49,62 @@ interface JobsResponse {
   offset: number
 }
 
-// Função para buscar jobs
 async function fetchJobs(limit: number, offset: number): Promise<JobsResponse> {
-  const response = await axios.get('/api/jobs', {
-    params: { limit, offset }
-  })
+  const response = await axios.get('/api/jobs', { params: { limit, offset } })
   return response.data
 }
 
-// Componente de Status Badge
+const statusConfig = {
+  pending: { label: 'Pendente', bg: '#F4F4F5', color: '#71717A' },
+  processing: { label: 'Processando', bg: '#EFF6FF', color: '#2563EB' },
+  done: { label: 'Concluído', bg: '#DCFCE7', color: '#15803D' },
+  failed: { label: 'Falhou', bg: '#FEE2E2', color: '#DC2626' },
+}
+
+const formatColors: Record<string, string> = {
+  pdf: '#DC2626',
+  docx: '#2563EB',
+  doc: '#2563EB',
+  md: '#7C3AED',
+  txt: '#059669',
+}
+
 function StatusBadge({ status }: { status: JobStatus }) {
-  const config = {
-    pending: { label: 'Pendente', color: 'default' as const },
-    processing: { label: 'Processando', color: 'info' as const },
-    done: { label: 'Concluído', color: 'success' as const },
-    failed: { label: 'Falhou', color: 'error' as const },
-  }
+  const cfg = statusConfig[status]
+  return (
+    <Chip
+      label={cfg.label}
+      size="small"
+      sx={{
+        height: 22,
+        fontSize: '0.72rem',
+        fontWeight: 600,
+        fontFamily: '"JetBrains Mono", monospace',
+        bgcolor: cfg.bg,
+        color: cfg.color,
+        border: 'none',
+      }}
+    />
+  )
+}
 
-  const { label, color } = config[status]
-
-  return <Chip label={label} color={color} size="small" />
+function FormatBadge({ format }: { format: string }) {
+  const color = formatColors[format.toLowerCase()] || '#6B7280'
+  return (
+    <Chip
+      label={format.toUpperCase()}
+      size="small"
+      sx={{
+        height: 22,
+        fontSize: '0.7rem',
+        fontWeight: 600,
+        fontFamily: '"JetBrains Mono", monospace',
+        bgcolor: `${color}12`,
+        color,
+        border: `1px solid ${color}30`,
+      }}
+    />
+  )
 }
 
 export default function HistoryPage() {
@@ -80,54 +115,36 @@ export default function HistoryPage() {
   const [orderBy, setOrderBy] = useState<'created_at' | 'original_name'>('created_at')
   const [order, setOrder] = useState<'asc' | 'desc'>('desc')
 
-  // React Query para buscar jobs
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['jobs', page, rowsPerPage],
     queryFn: () => fetchJobs(rowsPerPage, page * rowsPerPage),
-    refetchInterval: 5000, // Atualiza a cada 5s
+    refetchInterval: 5000,
   })
 
-  // Filtrar jobs localmente
   const filteredJobs = React.useMemo(() => {
     if (!data?.jobs) return []
-
     let filtered = data.jobs
 
-    // Filtro de busca
     if (searchQuery) {
-      filtered = filtered.filter(job =>
+      filtered = filtered.filter((job) =>
         job.original_name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 
-    // Filtro de status
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(job => job.status === statusFilter)
+      filtered = filtered.filter((job) => job.status === statusFilter)
     }
 
-    // Ordenação
     filtered.sort((a, b) => {
-      let aValue = orderBy === 'created_at' ? new Date(a.created_at).getTime() : a.original_name
-      let bValue = orderBy === 'created_at' ? new Date(b.created_at).getTime() : b.original_name
-
-      if (order === 'asc') {
-        return aValue > bValue ? 1 : -1
-      } else {
-        return aValue < bValue ? 1 : -1
-      }
+      const aValue =
+        orderBy === 'created_at' ? new Date(a.created_at).getTime() : a.original_name
+      const bValue =
+        orderBy === 'created_at' ? new Date(b.created_at).getTime() : b.original_name
+      return order === 'asc' ? (aValue > bValue ? 1 : -1) : aValue < bValue ? 1 : -1
     })
 
     return filtered
   }, [data?.jobs, searchQuery, statusFilter, orderBy, order])
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
 
   const handleSort = (column: 'created_at' | 'original_name') => {
     const isAsc = orderBy === column && order === 'asc'
@@ -137,86 +154,122 @@ export default function HistoryPage() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
         <Box>
-          <Typography variant="h4" gutterBottom fontWeight={700}>
-            Histórico de Conversões
+          <Typography variant="h2" sx={{ color: '#18181B', mb: 0.5 }}>
+            Histórico
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {data?.total || 0} conversões realizadas
+          <Typography variant="body2" sx={{ color: '#71717A' }}>
+            {data?.total ?? 0} conversões realizadas
           </Typography>
         </Box>
-
         <Tooltip title="Atualizar">
-          <IconButton onClick={() => refetch()} color="primary">
-            <RefreshIcon />
+          <IconButton
+            onClick={() => refetch()}
+            size="small"
+            sx={{
+              border: '1px solid #E4E4E7',
+              borderRadius: '8px',
+              color: '#71717A',
+              '&:hover': { bgcolor: '#F4F4F5', color: '#18181B' },
+            }}
+          >
+            <RefreshIcon sx={{ fontSize: 18 }} />
           </IconButton>
         </Tooltip>
       </Box>
 
       {/* Filtros */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Buscar por nome do arquivo..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Buscar por nome do arquivo..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ fontSize: 16, color: '#A1A1AA' }} />
+              </InputAdornment>
+            ),
+            sx: {
+              bgcolor: '#FFFFFF',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+            },
+          }}
+        />
+
+        <FormControl size="small" sx={{ minWidth: 160, flexShrink: 0 }}>
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as JobStatus | 'all')}
+            displayEmpty
+            sx={{
+              bgcolor: '#FFFFFF',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              color: statusFilter === 'all' ? '#71717A' : '#18181B',
             }}
-          />
+          >
+            <MenuItem value="all" sx={{ fontSize: '0.875rem' }}>Todos os status</MenuItem>
+            <MenuItem value="pending" sx={{ fontSize: '0.875rem' }}>Pendente</MenuItem>
+            <MenuItem value="processing" sx={{ fontSize: '0.875rem' }}>Processando</MenuItem>
+            <MenuItem value="done" sx={{ fontSize: '0.875rem' }}>Concluído</MenuItem>
+            <MenuItem value="failed" sx={{ fontSize: '0.875rem' }}>Falhou</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
 
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={statusFilter}
-              label="Status"
-              onChange={(e) => setStatusFilter(e.target.value as JobStatus | 'all')}
-            >
-              <MenuItem value="all">Todos</MenuItem>
-              <MenuItem value="pending">Pendente</MenuItem>
-              <MenuItem value="processing">Processando</MenuItem>
-              <MenuItem value="done">Concluído</MenuItem>
-              <MenuItem value="failed">Falhou</MenuItem>
-            </Select>
-          </FormControl>
-        </Stack>
-      </Paper>
-
-      {/* Tabela */}
+      {/* States */}
       {isLoading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
+          <CircularProgress size={32} sx={{ color: '#F97316' }} />
         </Box>
       )}
 
       {isError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert
+          severity="error"
+          sx={{ borderRadius: '10px', border: '1px solid #FECACA', bgcolor: '#FEF2F2' }}
+        >
           Erro ao carregar histórico: {(error as Error).message}
         </Alert>
       )}
 
       {!isLoading && !isError && filteredJobs.length === 0 && (
-        <Paper sx={{ p: 8, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: 10,
+            border: '1px dashed #E4E4E7',
+            borderRadius: '14px',
+            bgcolor: '#FAFAF9',
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, color: '#18181B', mb: 0.75 }}>
             Nenhuma conversão encontrada
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography variant="body2" sx={{ color: '#71717A' }}>
             {searchQuery || statusFilter !== 'all'
               ? 'Tente ajustar os filtros'
               : 'Faça o upload de um documento para começar'}
           </Typography>
-        </Paper>
+        </Box>
       )}
 
       {!isLoading && !isError && filteredJobs.length > 0 && (
         <>
-          <TableContainer component={Paper}>
+          <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{ border: '1px solid #E4E4E7', borderRadius: '12px', overflow: 'hidden' }}
+          >
             <Table>
               <TableHead>
-                <TableRow>
+                <TableRow sx={{ bgcolor: '#FAFAF9' }}>
                   <TableCell>
                     <TableSortLabel
                       active={orderBy === 'original_name'}
@@ -226,7 +279,7 @@ export default function HistoryPage() {
                       Arquivo
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell>Formato de Destino</TableCell>
+                  <TableCell>Formato</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>
                     <TableSortLabel
@@ -237,31 +290,51 @@ export default function HistoryPage() {
                       Data
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell align="right">Ações</TableCell>
+                  <TableCell align="right">Download</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredJobs.map((job) => (
-                  <TableRow key={job.id} hover>
+                  <TableRow
+                    key={job.id}
+                    sx={{
+                      '&:hover': { bgcolor: '#FAFAF9' },
+                      '&:last-child td': { borderBottom: 'none' },
+                    }}
+                  >
                     <TableCell>
-                      <Typography variant="body2" fontWeight={500}>
+                      <Typography
+                        sx={{ fontWeight: 500, fontSize: '0.875rem', color: '#18181B', mb: 0.25 }}
+                      >
                         {job.original_name}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" fontFamily="monospace">
+                      <Typography
+                        sx={{
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: '0.68rem',
+                          color: '#A1A1AA',
+                        }}
+                      >
                         {job.id.slice(0, 8)}...
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip label={job.target_format.toUpperCase()} size="small" variant="outlined" />
+                      <FormatBadge format={job.target_format} />
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={job.status} />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
+                      <Typography sx={{ fontSize: '0.8125rem', color: '#18181B', mb: 0.125 }}>
                         {new Date(job.created_at).toLocaleDateString('pt-BR')}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography
+                        sx={{
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: '0.7rem',
+                          color: '#A1A1AA',
+                        }}
+                      >
                         {new Date(job.created_at).toLocaleTimeString('pt-BR')}
                       </Typography>
                     </TableCell>
@@ -270,10 +343,19 @@ export default function HistoryPage() {
                         <Tooltip title="Baixar arquivo">
                           <IconButton
                             size="small"
-                            color="primary"
                             href={`/api/jobs/${job.id}/download`}
+                            sx={{
+                              border: '1px solid #E4E4E7',
+                              borderRadius: '7px',
+                              color: '#71717A',
+                              '&:hover': {
+                                bgcolor: '#F0FDF4',
+                                borderColor: '#BBF7D0',
+                                color: '#16A34A',
+                              },
+                            }}
                           >
-                            <DownloadIcon />
+                            <DownloadIcon sx={{ fontSize: 16 }} />
                           </IconButton>
                         </Tooltip>
                       )}
@@ -288,12 +370,23 @@ export default function HistoryPage() {
             component="div"
             count={data?.total || 0}
             page={page}
-            onPageChange={handleChangePage}
+            onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10))
+              setPage(0)
+            }}
             rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Linhas por página"
-            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+            labelRowsPerPage="Por página"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
+            sx={{
+              mt: 0.5,
+              color: '#71717A',
+              fontSize: '0.8125rem',
+              '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                fontSize: '0.8125rem',
+              },
+            }}
           />
         </>
       )}
