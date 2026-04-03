@@ -1,6 +1,5 @@
 import React, { useRef } from 'react'
 import {
-  Paper,
   Typography,
   Button,
   Box,
@@ -8,16 +7,15 @@ import {
   Stack,
   CircularProgress
 } from '@mui/material'
-import {
-  CloudUpload as CloudUploadIcon,
-  InsertDriveFile as FileIcon
-} from '@mui/icons-material'
+import { CloudUpload as CloudUploadIcon } from '@mui/icons-material'
 import { useDragAndDrop } from '../hooks/useDragAndDrop'
 
 interface DropZoneProps {
   onFile: (f: File) => void
   disabled?: boolean
 }
+
+const FORMATS = ['PDF', 'DOCX', 'DOC', 'TXT', 'MD']
 
 export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
   const { ref, file, setFile, over } = useDragAndDrop()
@@ -33,59 +31,94 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
   }
 
   return (
-    <Paper
+    <Box
       ref={ref}
-      elevation={over && !disabled ? 12 : 3}
+      onClick={() => !disabled && inputRef.current?.click()}
       sx={{
-        p: 6,
-        border: '3px dashed',
-        borderColor: disabled ? 'grey.200' : (over ? 'primary.main' : 'grey.300'),
-        bgcolor: disabled ? 'grey.100' : (over ? 'primary.50' : 'background.paper'),
-        background: over && !disabled
-          ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
-          : disabled ? 'grey.100' : 'background.paper',
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        border: '1.5px dashed',
+        borderColor: disabled ? '#D4D4D8' : over ? '#F97316' : '#D4D4D8',
+        borderRadius: '14px',
+        p: 7,
+        bgcolor: disabled
+          ? '#F4F4F5'
+          : over
+          ? '#FFF7ED'
+          : '#FFFFFF',
+        transition: 'all 0.2s ease',
         cursor: disabled ? 'not-allowed' : 'pointer',
         textAlign: 'center',
-        opacity: disabled ? 0.6 : 1,
-        transform: over && !disabled ? 'scale(1.02)' : 'scale(1)',
-        '&:hover': {
-          borderColor: disabled ? 'grey.200' : 'primary.main',
-          bgcolor: disabled ? 'grey.100' : 'grey.50',
-          transform: disabled ? 'scale(1)' : 'scale(1.01)',
-          boxShadow: disabled ? 'none' : '0 8px 24px rgba(102, 126, 234, 0.2)',
-        },
+        opacity: disabled ? 0.65 : 1,
+        '&:hover': !disabled ? {
+          borderColor: '#A1A1AA',
+          bgcolor: '#FAFAF9',
+        } : {},
       }}
-      onClick={() => !disabled && inputRef.current?.click()}
     >
-      <Stack spacing={2} alignItems="center">
-        {disabled ? (
-          <CircularProgress size={64} />
-        ) : (
-          <CloudUploadIcon sx={{ fontSize: 64, color: over ? 'primary.main' : 'grey.400' }} />
-        )}
+      <Stack spacing={3} alignItems="center">
+        <Box
+          sx={{
+            width: 56,
+            height: 56,
+            borderRadius: '14px',
+            bgcolor: over && !disabled ? '#FFF7ED' : '#F4F4F5',
+            border: '1px solid',
+            borderColor: over && !disabled ? '#FED7AA' : '#E4E4E7',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {disabled ? (
+            <CircularProgress size={24} sx={{ color: '#A1A1AA' }} />
+          ) : (
+            <CloudUploadIcon
+              sx={{
+                fontSize: 26,
+                color: over ? '#F97316' : '#A1A1AA',
+                transition: 'color 0.2s ease',
+              }}
+            />
+          )}
+        </Box>
 
-        <Typography variant="h6" color="text.primary">
-          {disabled ? 'Enviando arquivo...' : 'Arraste seu documento aqui'}
-        </Typography>
+        <Box>
+          <Typography
+            variant="body1"
+            sx={{ fontWeight: 600, color: '#18181B', mb: 0.5 }}
+          >
+            {disabled ? 'Enviando arquivo...' : 'Solte seu documento aqui'}
+          </Typography>
+          {!disabled && (
+            <Typography variant="body2" sx={{ color: '#71717A' }}>
+              ou clique para selecionar
+            </Typography>
+          )}
+        </Box>
 
         {!disabled && (
-          <>
-            <Typography variant="body2" color="text.secondary">
-              ou
-            </Typography>
-
-            <Button
-              variant="contained"
-              startIcon={<CloudUploadIcon />}
-              onClick={(e) => {
-                e.stopPropagation()
-                inputRef.current?.click()
-              }}
-            >
-              Selecionar arquivo
-            </Button>
-          </>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<CloudUploadIcon sx={{ fontSize: 16 }} />}
+            onClick={(e) => {
+              e.stopPropagation()
+              inputRef.current?.click()
+            }}
+            sx={{
+              borderColor: '#E4E4E7',
+              color: '#18181B',
+              fontSize: '0.8125rem',
+              px: 2.5,
+              py: 0.875,
+              '&:hover': {
+                borderColor: '#A1A1AA',
+                bgcolor: '#F4F4F5',
+              },
+            }}
+          >
+            Selecionar arquivo
+          </Button>
         )}
 
         <input
@@ -97,38 +130,25 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
           disabled={disabled}
         />
 
-        <Box>
-          <Chip label="PDF" size="small" sx={{ mr: 1 }} />
-          <Chip label="DOCX" size="small" sx={{ mr: 1 }} />
-          <Chip label="DOC" size="small" sx={{ mr: 1 }} />
-          <Chip label="MD" size="small" />
-        </Box>
-
-        {file && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              bgcolor: 'success.50',
-              border: '1px solid',
-              borderColor: 'success.200',
-              width: '100%'
-            }}
-          >
-            <Stack direction="row" spacing={2} alignItems="center">
-              <FileIcon color="success" />
-              <Box sx={{ flex: 1, textAlign: 'left' }}>
-                <Typography variant="body1" fontWeight={600}>
-                  {file.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {(file.size / 1024).toFixed(1)} KB
-                </Typography>
-              </Box>
-            </Stack>
-          </Paper>
-        )}
+        <Stack direction="row" spacing={0.75} flexWrap="wrap" justifyContent="center">
+          {FORMATS.map((fmt) => (
+            <Chip
+              key={fmt}
+              label={fmt}
+              size="small"
+              variant="outlined"
+              sx={{
+                height: 22,
+                fontSize: '0.7rem',
+                fontFamily: '"JetBrains Mono", monospace',
+                borderColor: '#E4E4E7',
+                color: '#71717A',
+                fontWeight: 500,
+              }}
+            />
+          ))}
+        </Stack>
       </Stack>
-    </Paper>
+    </Box>
   )
 }
