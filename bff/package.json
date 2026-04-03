@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch --env-file=.env src/server.ts",
     "dev:worker": "tsx watch src/workers/convertWorker.ts",
     "dev:worker:simple": "tsx watch src/workers/simpleWorker.ts",
     "start": "node dist/server.js",

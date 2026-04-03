@@ -5,9 +5,9 @@ import path from 'path'
 import fs from 'fs'
 import { jobsRepository } from '../db/jobsRepository'
 import { inMemoryJobsRepository } from '../db/inMemoryRepository'
-import { redis } from '../redis/client'
 import { validateFile } from '../middlewares/fileValidation'
 import { pool } from '../db/client'
+import { processJob } from '../services/jobProcessor'
 
 let useInMemory = false
 
@@ -25,7 +25,6 @@ pool.query('SELECT NOW()')
     useInMemory = true
   })
 
-const QUEUE_KEY = 'convert:queue'
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads')
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true })
 
@@ -56,12 +55,8 @@ router.post('/convert', upload.single('file'), validateFile, async (req, res) =>
 
     console.log(`✅ Job criado: ${jobId} - ${file.originalname} → ${target}`)
 
-    try {
-      await redis.lpush(QUEUE_KEY, JSON.stringify({ jobId }))
-      console.log(`📬 Job adicionado à fila`)
-    } catch (redisError) {
-      console.log(`⚠️ Redis indisponível - polling ativo`)
-    }
+    // Processa em background sem bloquear a resposta
+    setImmediate(() => processJob(jobId, repo).catch(console.error))
 
     return res.json({ jobId: job.id })
   } catch (error) {

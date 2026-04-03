@@ -79,7 +79,7 @@ export default function UploadPage() {
     async () => {
       if (jobId && status !== 'done' && status !== 'failed') await checkStatus()
     },
-    2000,
+    800,
     !!jobId && status !== 'done' && status !== 'failed'
   )
 
