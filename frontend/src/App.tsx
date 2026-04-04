@@ -8,7 +8,7 @@ import {
   Box,
   Tabs,
   Tab,
-  Chip
+  Chip,
 } from '@mui/material'
 import { Upload as UploadIcon, History as HistoryIcon } from '@mui/icons-material'
 import UploadPage from './pages/UploadPage'
@@ -20,25 +20,28 @@ function Navigation() {
 
   return (
     <AppBar
-      position="static"
+      position="sticky"
       elevation={0}
-      sx={{
-        bgcolor: '#FFFFFF',
-        borderBottom: '1px solid #E4E4E7',
-      }}
+      sx={{ bgcolor: '#FFFFFF', borderBottom: '1px solid #E4E4E7', top: 0, zIndex: 100 }}
     >
-      <Toolbar sx={{ gap: 3, minHeight: '60px !important' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 2 }}>
+      <Toolbar
+        sx={{
+          gap: { xs: 1.5, sm: 3 },
+          minHeight: { xs: '52px !important', sm: '60px !important' },
+          px: { xs: 2, sm: 3 },
+        }}
+      >
+        {/* Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: { xs: 0, sm: 2 }, flexShrink: 0 }}>
           <Box
             sx={{
-              width: 30,
-              height: 30,
+              width: { xs: 28, sm: 30 },
+              height: { xs: 28, sm: 30 },
               borderRadius: '8px',
               bgcolor: '#1A1A2E',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              flexShrink: 0,
             }}
           >
             <Typography
@@ -46,7 +49,7 @@ function Navigation() {
               sx={{
                 color: '#F97316',
                 fontWeight: 800,
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 fontFamily: '"Sora", sans-serif',
                 lineHeight: 1,
               }}
@@ -54,10 +57,12 @@ function Navigation() {
               FD
             </Typography>
           </Box>
+
+          {/* Oculta texto e badge em telas muito pequenas */}
           <Typography
             variant="h6"
-            component="div"
             sx={{
+              display: { xs: 'none', sm: 'block' },
               fontWeight: 700,
               color: '#18181B',
               fontSize: '0.975rem',
@@ -70,6 +75,7 @@ function Navigation() {
             label="beta"
             size="small"
             sx={{
+              display: { xs: 'none', sm: 'flex' },
               height: 18,
               fontSize: '0.65rem',
               fontWeight: 600,
@@ -82,40 +88,46 @@ function Navigation() {
           />
         </Box>
 
+        {/* Tabs */}
         <Tabs
           value={currentTab}
           sx={{
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#F97316',
-              height: 2,
-            },
+            '& .MuiTabs-indicator': { backgroundColor: '#F97316', height: 2 },
             '& .MuiTab-root': {
               color: '#71717A',
               fontWeight: 500,
-              fontSize: '0.85rem',
-              minHeight: '60px',
-              paddingX: 0,
-              mr: 3,
-              '&.Mui-selected': {
-                color: '#18181B',
-                fontWeight: 600,
-              },
+              fontSize: { xs: '0.8rem', sm: '0.85rem' },
+              minHeight: { xs: '52px', sm: '60px' },
+              minWidth: { xs: 48, sm: 'auto' },
+              px: { xs: 1.5, sm: 0 },
+              mr: { xs: 1, sm: 3 },
+              '&.Mui-selected': { color: '#18181B', fontWeight: 600 },
             },
           }}
         >
           <Tab
-            label="Converter"
-            icon={<UploadIcon sx={{ fontSize: 16 }} />}
+            icon={<UploadIcon sx={{ fontSize: { xs: 20, sm: 16 } }} />}
             iconPosition="start"
+            label={
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                Converter
+              </Box>
+            }
             component={RouterLink}
             to="/"
+            aria-label="Converter documento"
           />
           <Tab
-            label="Histórico"
-            icon={<HistoryIcon sx={{ fontSize: 16 }} />}
+            icon={<HistoryIcon sx={{ fontSize: { xs: 20, sm: 16 } }} />}
             iconPosition="start"
+            label={
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                Histórico
+              </Box>
+            }
             component={RouterLink}
             to="/history"
+            aria-label="Histórico de conversões"
           />
         </Tabs>
       </Toolbar>
@@ -128,7 +140,14 @@ export default function App() {
     <BrowserRouter>
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FAFAF9' }}>
         <Navigation />
-        <Container maxWidth="lg" sx={{ mt: 5, mb: 6, flex: 1 }}>
+        <Container
+          maxWidth="lg"
+          sx={{
+            mt: { xs: 3, sm: 4, md: 5 },
+            mb: { xs: 5, md: 6 },
+            flex: 1,
+          }}
+        >
           <Routes>
             <Route path="/" element={<UploadPage />} />
             <Route path="/history" element={<HistoryPage />} />
