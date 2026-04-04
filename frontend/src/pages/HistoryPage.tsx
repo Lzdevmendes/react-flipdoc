@@ -22,7 +22,7 @@ import {
   CircularProgress,
   Alert,
   TableSortLabel,
-  InputAdornment
+  InputAdornment,
 } from '@mui/material'
 import {
   Download as DownloadIcon,
@@ -55,18 +55,18 @@ async function fetchJobs(limit: number, offset: number): Promise<JobsResponse> {
 }
 
 const statusConfig = {
-  pending: { label: 'Pendente', bg: '#F4F4F5', color: '#71717A' },
+  pending:    { label: 'Pendente',    bg: '#F4F4F5', color: '#71717A' },
   processing: { label: 'Processando', bg: '#EFF6FF', color: '#2563EB' },
-  done: { label: 'Concluído', bg: '#DCFCE7', color: '#15803D' },
-  failed: { label: 'Falhou', bg: '#FEE2E2', color: '#DC2626' },
+  done:       { label: 'Concluído',   bg: '#DCFCE7', color: '#15803D' },
+  failed:     { label: 'Falhou',      bg: '#FEE2E2', color: '#DC2626' },
 }
 
 const formatColors: Record<string, string> = {
-  pdf: '#DC2626',
+  pdf:  '#DC2626',
   docx: '#2563EB',
-  doc: '#2563EB',
-  md: '#7C3AED',
-  txt: '#059669',
+  doc:  '#2563EB',
+  md:   '#7C3AED',
+  txt:  '#059669',
 }
 
 function StatusBadge({ status }: { status: JobStatus }) {
@@ -136,10 +136,8 @@ export default function HistoryPage() {
     }
 
     filtered.sort((a, b) => {
-      const aValue =
-        orderBy === 'created_at' ? new Date(a.created_at).getTime() : a.original_name
-      const bValue =
-        orderBy === 'created_at' ? new Date(b.created_at).getTime() : b.original_name
+      const aValue = orderBy === 'created_at' ? new Date(a.created_at).getTime() : a.original_name
+      const bValue = orderBy === 'created_at' ? new Date(b.created_at).getTime() : b.original_name
       return order === 'asc' ? (aValue > bValue ? 1 : -1) : aValue < bValue ? 1 : -1
     })
 
@@ -155,12 +153,27 @@ export default function HistoryPage() {
   return (
     <Box>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          mb: { xs: 3, sm: 4 },
+          gap: 2,
+        }}
+      >
         <Box>
-          <Typography variant="h2" sx={{ color: '#18181B', mb: 0.5 }}>
+          <Typography
+            variant="h2"
+            sx={{
+              color: '#18181B',
+              mb: 0.5,
+              fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
+            }}
+          >
             Histórico
           </Typography>
-          <Typography variant="body2" sx={{ color: '#71717A' }}>
+          <Typography variant="body2" sx={{ color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
             {data?.total ?? 0} conversões realizadas
           </Typography>
         </Box>
@@ -168,10 +181,13 @@ export default function HistoryPage() {
           <IconButton
             onClick={() => refetch()}
             size="small"
+            aria-label="Atualizar lista"
             sx={{
               border: '1px solid #E4E4E7',
               borderRadius: '8px',
               color: '#71717A',
+              minWidth: 40,
+              minHeight: 40,
               '&:hover': { bgcolor: '#F4F4F5', color: '#18181B' },
             }}
           >
@@ -194,15 +210,11 @@ export default function HistoryPage() {
                 <SearchIcon sx={{ fontSize: 16, color: '#A1A1AA' }} />
               </InputAdornment>
             ),
-            sx: {
-              bgcolor: '#FFFFFF',
-              borderRadius: '8px',
-              fontSize: '0.875rem',
-            },
+            sx: { bgcolor: '#FFFFFF', borderRadius: '8px', fontSize: '0.875rem' },
           }}
         />
 
-        <FormControl size="small" sx={{ minWidth: 160, flexShrink: 0 }}>
+        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 }, flexShrink: 0 }}>
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as JobStatus | 'all')}
@@ -214,22 +226,23 @@ export default function HistoryPage() {
               color: statusFilter === 'all' ? '#71717A' : '#18181B',
             }}
           >
-            <MenuItem value="all" sx={{ fontSize: '0.875rem' }}>Todos os status</MenuItem>
-            <MenuItem value="pending" sx={{ fontSize: '0.875rem' }}>Pendente</MenuItem>
+            <MenuItem value="all"       sx={{ fontSize: '0.875rem' }}>Todos os status</MenuItem>
+            <MenuItem value="pending"   sx={{ fontSize: '0.875rem' }}>Pendente</MenuItem>
             <MenuItem value="processing" sx={{ fontSize: '0.875rem' }}>Processando</MenuItem>
-            <MenuItem value="done" sx={{ fontSize: '0.875rem' }}>Concluído</MenuItem>
-            <MenuItem value="failed" sx={{ fontSize: '0.875rem' }}>Falhou</MenuItem>
+            <MenuItem value="done"      sx={{ fontSize: '0.875rem' }}>Concluído</MenuItem>
+            <MenuItem value="failed"    sx={{ fontSize: '0.875rem' }}>Falhou</MenuItem>
           </Select>
         </FormControl>
       </Stack>
 
-      {/* States */}
+      {/* Loading */}
       {isLoading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
           <CircularProgress size={32} sx={{ color: '#F97316' }} />
         </Box>
       )}
 
+      {/* Erro */}
       {isError && (
         <Alert
           severity="error"
@@ -239,20 +252,21 @@ export default function HistoryPage() {
         </Alert>
       )}
 
+      {/* Vazio */}
       {!isLoading && !isError && filteredJobs.length === 0 && (
         <Box
           sx={{
             textAlign: 'center',
-            py: 10,
+            py: { xs: 6, sm: 10 },
             border: '1px dashed #E4E4E7',
             borderRadius: '14px',
             bgcolor: '#FAFAF9',
           }}
         >
-          <Typography sx={{ fontWeight: 600, color: '#18181B', mb: 0.75 }}>
+          <Typography sx={{ fontWeight: 600, color: '#18181B', mb: 0.75, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
             Nenhuma conversão encontrada
           </Typography>
-          <Typography variant="body2" sx={{ color: '#71717A' }}>
+          <Typography variant="body2" sx={{ color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
             {searchQuery || statusFilter !== 'all'
               ? 'Tente ajustar os filtros'
               : 'Faça o upload de um documento para começar'}
@@ -260,14 +274,21 @@ export default function HistoryPage() {
         </Box>
       )}
 
+      {/* Tabela */}
       {!isLoading && !isError && filteredJobs.length > 0 && (
         <>
           <TableContainer
             component={Paper}
             elevation={0}
-            sx={{ border: '1px solid #E4E4E7', borderRadius: '12px', overflow: 'hidden' }}
+            sx={{
+              border: '1px solid #E4E4E7',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              overflowX: 'auto', // scroll horizontal em mobile
+              WebkitOverflowScrolling: 'touch',
+            }}
           >
-            <Table>
+            <Table sx={{ minWidth: 500 }}>
               <TableHead>
                 <TableRow sx={{ bgcolor: '#FAFAF9' }}>
                   <TableCell>
@@ -279,9 +300,14 @@ export default function HistoryPage() {
                       Arquivo
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell>Formato</TableCell>
+
+                  {/* Oculto em mobile */}
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Formato</TableCell>
+
                   <TableCell>Status</TableCell>
-                  <TableCell>
+
+                  {/* Oculto em mobile */}
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     <TableSortLabel
                       active={orderBy === 'created_at'}
                       direction={orderBy === 'created_at' ? order : 'asc'}
@@ -290,9 +316,11 @@ export default function HistoryPage() {
                       Data
                     </TableSortLabel>
                   </TableCell>
+
                   <TableCell align="right">Download</TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
                 {filteredJobs.map((job) => (
                   <TableRow
@@ -302,29 +330,59 @@ export default function HistoryPage() {
                       '&:last-child td': { borderBottom: 'none' },
                     }}
                   >
-                    <TableCell>
+                    <TableCell sx={{ maxWidth: { xs: 140, sm: 240, md: 'none' } }}>
                       <Typography
-                        sx={{ fontWeight: 500, fontSize: '0.875rem', color: '#18181B', mb: 0.25 }}
+                        sx={{
+                          fontWeight: 500,
+                          fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                          color: '#18181B',
+                          mb: 0.25,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
                       >
                         {job.original_name}
                       </Typography>
+                      {/* Em mobile mostra o formato inline */}
+                      <Stack
+                        direction="row"
+                        spacing={0.75}
+                        alignItems="center"
+                        sx={{ display: { xs: 'flex', sm: 'none' } }}
+                      >
+                        <FormatBadge format={job.target_format} />
+                        <Typography
+                          sx={{
+                            fontFamily: '"JetBrains Mono", monospace',
+                            fontSize: '0.65rem',
+                            color: '#A1A1AA',
+                          }}
+                        >
+                          {job.id.slice(0, 6)}…
+                        </Typography>
+                      </Stack>
                       <Typography
                         sx={{
                           fontFamily: '"JetBrains Mono", monospace',
                           fontSize: '0.68rem',
                           color: '#A1A1AA',
+                          display: { xs: 'none', sm: 'block' },
                         }}
                       >
                         {job.id.slice(0, 8)}...
                       </Typography>
                     </TableCell>
-                    <TableCell>
+
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                       <FormatBadge format={job.target_format} />
                     </TableCell>
+
                     <TableCell>
                       <StatusBadge status={job.status} />
                     </TableCell>
-                    <TableCell>
+
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       <Typography sx={{ fontSize: '0.8125rem', color: '#18181B', mb: 0.125 }}>
                         {new Date(job.created_at).toLocaleDateString('pt-BR')}
                       </Typography>
@@ -338,16 +396,20 @@ export default function HistoryPage() {
                         {new Date(job.created_at).toLocaleTimeString('pt-BR')}
                       </Typography>
                     </TableCell>
+
                     <TableCell align="right">
                       {job.status === 'done' && job.download_path && (
                         <Tooltip title="Baixar arquivo">
                           <IconButton
                             size="small"
                             href={`/api/jobs/${job.id}/download`}
+                            aria-label={`Baixar ${job.original_name}`}
                             sx={{
                               border: '1px solid #E4E4E7',
                               borderRadius: '7px',
                               color: '#71717A',
+                              minWidth: 36,
+                              minHeight: 36,
                               '&:hover': {
                                 bgcolor: '#F0FDF4',
                                 borderColor: '#BBF7D0',
@@ -377,14 +439,14 @@ export default function HistoryPage() {
               setPage(0)
             }}
             rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Por página"
+            labelRowsPerPage={<Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Por página</Box>}
             labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
             sx={{
               mt: 0.5,
               color: '#71717A',
               fontSize: '0.8125rem',
               '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-                fontSize: '0.8125rem',
+                fontSize: { xs: '0.75rem', sm: '0.8125rem' },
               },
             }}
           />
