@@ -8,7 +8,7 @@ import {
   Button,
   Chip,
   Stack,
-  Divider
+  Divider,
 } from '@mui/material'
 import {
   Download as DownloadIcon,
@@ -40,8 +40,8 @@ function FileFormatBadge({ label, ext }: { label: string; ext: string }) {
   return (
     <Box
       sx={{
-        px: 2.5,
-        py: 1,
+        px: { xs: 1.5, sm: 2.5 },
+        py: { xs: 0.75, sm: 1 },
         borderRadius: '8px',
         border: '1.5px solid',
         borderColor: color,
@@ -49,21 +49,21 @@ function FileFormatBadge({ label, ext }: { label: string; ext: string }) {
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minWidth: 72,
+        minWidth: { xs: 56, sm: 72 },
       }}
     >
       <Typography
         sx={{
           fontFamily: '"JetBrains Mono", monospace',
-          fontSize: '0.65rem',
-          color: color,
+          fontSize: { xs: '0.6rem', sm: '0.65rem' },
+          color,
           opacity: 0.75,
           letterSpacing: '0.06em',
         }}
       >
         {`.${ext}`}
       </Typography>
-      <Typography sx={{ fontWeight: 700, fontSize: '1rem', color, lineHeight: 1.3 }}>
+      <Typography sx={{ fontWeight: 700, fontSize: { xs: '0.875rem', sm: '1rem' }, color, lineHeight: 1.3 }}>
         {label}
       </Typography>
     </Box>
@@ -92,20 +92,23 @@ export default function UploadPage() {
   const srcLabel = srcExt.toUpperCase()
 
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+    <Box sx={{ maxWidth: { xs: '100%', md: 720 }, mx: 'auto' }}>
       {/* Header */}
-      <Box sx={{ mb: 5 }}>
-        <Typography variant="h2" sx={{ mb: 1, color: '#18181B' }}>
+      <Box sx={{ mb: { xs: 3, sm: 5 } }}>
+        <Typography
+          variant="h2"
+          sx={{ mb: 1, color: '#18181B', fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}
+        >
           Converter documento
         </Typography>
-        <Typography variant="body1" sx={{ color: '#71717A' }}>
+        <Typography variant="body1" sx={{ color: '#71717A', fontSize: { xs: '0.875rem', md: '0.9375rem' } }}>
           Transforme arquivos entre PDF, DOCX, Markdown e outros formatos.
         </Typography>
       </Box>
 
-      {/* Formato de destino */}
+      {/* Formato de destino (antes de selecionar arquivo) */}
       {!jobId && (
-        <Box sx={{ mb: 4 }}>
+        <Box sx={{ mb: { xs: 3, sm: 4 } }}>
           <Typography
             variant="caption"
             sx={{
@@ -120,11 +123,7 @@ export default function UploadPage() {
           >
             Converter para
           </Typography>
-          <FormatSelector
-            value={targetFormat}
-            onChange={setTargetFormat}
-            disabled={isUploading || !!jobId}
-          />
+          <FormatSelector value={targetFormat} onChange={setTargetFormat} disabled={isUploading || !!jobId} />
         </Box>
       )}
 
@@ -133,39 +132,46 @@ export default function UploadPage() {
         <DropZone onFile={handleFileSelect} disabled={isUploading} />
       )}
 
-      {/* Arquivo selecionado — preview e ação */}
+      {/* Arquivo selecionado */}
       {selectedFile && !jobId && (
         <Paper
           className="animate-slideInUp"
           elevation={0}
-          sx={{
-            border: '1px solid #E4E4E7',
-            borderRadius: '14px',
-            overflow: 'hidden',
-          }}
+          sx={{ border: '1px solid #E4E4E7', borderRadius: '14px', overflow: 'hidden' }}
         >
-          {/* Barra de arquivo */}
+          {/* Barra do arquivo */}
           <Box
             sx={{
-              px: 3,
-              py: 2,
+              px: { xs: 2, sm: 3 },
+              py: { xs: 1.5, sm: 2 },
               bgcolor: '#F9F9F9',
               borderBottom: '1px solid #E4E4E7',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              gap: 1,
             }}
           >
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ overflow: 'hidden', flex: 1 }}>
               <Box
                 sx={{
                   width: 8,
                   height: 8,
                   borderRadius: '50%',
                   bgcolor: formatColors[srcExt] || '#A1A1AA',
+                  flexShrink: 0,
                 }}
               />
-              <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#18181B' }}>
+              <Typography
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                  color: '#18181B',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {selectedFile.name}
               </Typography>
               <Typography
@@ -173,6 +179,8 @@ export default function UploadPage() {
                   fontSize: '0.75rem',
                   color: '#A1A1AA',
                   fontFamily: '"JetBrains Mono", monospace',
+                  flexShrink: 0,
+                  display: { xs: 'none', sm: 'block' },
                 }}
               >
                 {(selectedFile.size / 1024).toFixed(1)} KB
@@ -187,6 +195,8 @@ export default function UploadPage() {
                 fontSize: '0.78rem',
                 px: 1.5,
                 py: 0.5,
+                flexShrink: 0,
+                minHeight: 32,
                 '&:hover': { bgcolor: '#F4F4F5', color: '#18181B' },
               }}
             >
@@ -194,15 +204,21 @@ export default function UploadPage() {
             </Button>
           </Box>
 
-          {/* Conversão visual */}
-          <Box sx={{ px: 3, py: 3.5 }}>
-            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3.5 }}>
+          {/* Conteúdo */}
+          <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3.5 } }}>
+            {/* Badges de formato */}
+            <Stack
+              direction="row"
+              spacing={{ xs: 1.5, sm: 2 }}
+              alignItems="center"
+              sx={{ mb: { xs: 2.5, sm: 3.5 } }}
+            >
               <FileFormatBadge label={srcLabel} ext={srcExt} />
-              <ArrowIcon sx={{ color: '#D4D4D8', fontSize: 22 }} />
+              <ArrowIcon sx={{ color: '#D4D4D8', fontSize: { xs: 18, sm: 22 }, flexShrink: 0 }} />
               <FileFormatBadge label={targetFormat.toUpperCase()} ext={targetFormat} />
             </Stack>
 
-            <Divider sx={{ mb: 3, borderColor: '#F4F4F5' }} />
+            <Divider sx={{ mb: { xs: 2.5, sm: 3 }, borderColor: '#F4F4F5' }} />
 
             <Typography
               variant="caption"
@@ -227,9 +243,9 @@ export default function UploadPage() {
               onClick={handleConvert}
               disabled={isUploading}
               sx={{
-                mt: 3.5,
-                py: 1.5,
-                fontSize: '0.9375rem',
+                mt: { xs: 2.5, sm: 3.5 },
+                py: { xs: 1.25, sm: 1.5 },
+                fontSize: { xs: '0.875rem', sm: '0.9375rem' },
                 bgcolor: '#1A1A2E',
                 borderRadius: '10px',
                 '&:hover': { bgcolor: '#2D2D44' },
@@ -249,8 +265,7 @@ export default function UploadPage() {
           elevation={0}
           sx={{
             border: '1px solid',
-            borderColor:
-              status === 'done' ? '#BBF7D0' : status === 'failed' ? '#FECACA' : '#E4E4E7',
+            borderColor: status === 'done' ? '#BBF7D0' : status === 'failed' ? '#FECACA' : '#E4E4E7',
             borderRadius: '14px',
             overflow: 'hidden',
           }}
@@ -258,13 +273,11 @@ export default function UploadPage() {
           {/* Header do status */}
           <Box
             sx={{
-              px: 3,
-              py: 2,
-              bgcolor:
-                status === 'done' ? '#F0FDF4' : status === 'failed' ? '#FEF2F2' : '#F9F9F9',
+              px: { xs: 2, sm: 3 },
+              py: { xs: 1.5, sm: 2 },
+              bgcolor: status === 'done' ? '#F0FDF4' : status === 'failed' ? '#FEF2F2' : '#F9F9F9',
               borderBottom: '1px solid',
-              borderColor:
-                status === 'done' ? '#BBF7D0' : status === 'failed' ? '#FECACA' : '#E4E4E7',
+              borderColor: status === 'done' ? '#BBF7D0' : status === 'failed' ? '#FECACA' : '#E4E4E7',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -295,9 +308,8 @@ export default function UploadPage() {
               <Typography
                 sx={{
                   fontWeight: 600,
-                  fontSize: '0.875rem',
-                  color:
-                    status === 'done' ? '#15803D' : status === 'failed' ? '#DC2626' : '#18181B',
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                  color: status === 'done' ? '#15803D' : status === 'failed' ? '#DC2626' : '#18181B',
                 }}
               >
                 {status === 'done'
@@ -314,29 +326,21 @@ export default function UploadPage() {
               size="small"
               sx={{
                 fontFamily: '"JetBrains Mono", monospace',
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 height: 22,
                 bgcolor:
-                  status === 'done'
-                    ? '#DCFCE7'
-                    : status === 'failed'
-                    ? '#FEE2E2'
-                    : '#F4F4F5',
+                  status === 'done' ? '#DCFCE7' : status === 'failed' ? '#FEE2E2' : '#F4F4F5',
                 color:
-                  status === 'done'
-                    ? '#15803D'
-                    : status === 'failed'
-                    ? '#DC2626'
-                    : '#71717A',
+                  status === 'done' ? '#15803D' : status === 'failed' ? '#DC2626' : '#71717A',
                 border: 'none',
                 fontWeight: 600,
               }}
             />
           </Box>
 
-          <Box sx={{ px: 3, py: 3 }}>
+          <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
             {/* Job ID */}
-            <Box sx={{ mb: 2.5 }}>
+            <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
               <Typography
                 variant="caption"
                 sx={{
@@ -353,7 +357,7 @@ export default function UploadPage() {
               <Typography
                 sx={{
                   fontFamily: '"JetBrains Mono", monospace',
-                  fontSize: '0.78rem',
+                  fontSize: { xs: '0.72rem', sm: '0.78rem' },
                   color: '#71717A',
                   bgcolor: '#F4F4F5',
                   px: 1.5,
@@ -368,7 +372,7 @@ export default function UploadPage() {
 
             {/* Progress bar */}
             {(status === 'processing' || status === 'pending') && (
-              <Box sx={{ mb: 2.5 }}>
+              <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
                 <LinearProgress
                   sx={{
                     height: 4,
@@ -379,25 +383,25 @@ export default function UploadPage() {
                 />
                 <Typography
                   variant="body2"
-                  sx={{ mt: 1.5, color: '#71717A', fontSize: '0.8125rem' }}
+                  sx={{ mt: 1.5, color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.8125rem' } }}
                 >
                   Convertendo seu documento, aguarde...
                 </Typography>
               </Box>
             )}
 
-            {/* Alerts */}
+            {/* Alert sucesso */}
             {status === 'done' && (
               <Alert
                 severity="success"
                 icon={<CheckIcon fontSize="small" />}
                 sx={{
-                  mb: 2.5,
+                  mb: { xs: 2, sm: 2.5 },
                   borderRadius: '8px',
                   bgcolor: '#F0FDF4',
                   border: '1px solid #BBF7D0',
                   color: '#15803D',
-                  fontSize: '0.8125rem',
+                  fontSize: { xs: '0.8rem', sm: '0.8125rem' },
                   '& .MuiAlert-icon': { color: '#16A34A' },
                 }}
               >
@@ -405,23 +409,24 @@ export default function UploadPage() {
               </Alert>
             )}
 
+            {/* Alert erro */}
             {error && (
               <Alert
                 severity="error"
                 icon={<ErrorIcon fontSize="small" />}
                 sx={{
-                  mb: 2.5,
+                  mb: { xs: 2, sm: 2.5 },
                   borderRadius: '8px',
                   bgcolor: '#FEF2F2',
                   border: '1px solid #FECACA',
-                  fontSize: '0.8125rem',
+                  fontSize: { xs: '0.8rem', sm: '0.8125rem' },
                 }}
               >
                 {error}
               </Alert>
             )}
 
-            {/* Ações: falha */}
+            {/* Ação: falha */}
             {status === 'failed' && (
               <Button
                 variant="outlined"
@@ -430,8 +435,8 @@ export default function UploadPage() {
                 onClick={handleNewConversion}
                 fullWidth
                 sx={{
-                  py: 1.5,
-                  fontSize: '0.875rem',
+                  py: { xs: 1.25, sm: 1.5 },
+                  fontSize: { xs: '0.875rem', sm: '0.875rem' },
                   borderColor: '#FECACA',
                   color: '#DC2626',
                   borderRadius: '10px',
@@ -452,8 +457,8 @@ export default function UploadPage() {
                   href={`/api/jobs/${jobId}/download`}
                   fullWidth
                   sx={{
-                    py: 1.5,
-                    fontSize: '0.9375rem',
+                    py: { xs: 1.25, sm: 1.5 },
+                    fontSize: { xs: '0.875rem', sm: '0.9375rem' },
                     bgcolor: '#16A34A',
                     borderRadius: '10px',
                     '&:hover': { bgcolor: '#15803D' },
@@ -468,8 +473,8 @@ export default function UploadPage() {
                   onClick={handleNewConversion}
                   fullWidth
                   sx={{
-                    py: 1.5,
-                    fontSize: '0.875rem',
+                    py: { xs: 1.25, sm: 1.5 },
+                    fontSize: { xs: '0.875rem', sm: '0.875rem' },
                     borderColor: '#E4E4E7',
                     color: '#18181B',
                     borderRadius: '10px',
