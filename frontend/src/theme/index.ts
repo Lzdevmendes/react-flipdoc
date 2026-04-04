@@ -1,6 +1,6 @@
-import { createTheme } from '@mui/material/styles'
+import { createTheme, responsiveFontSizes } from '@mui/material/styles'
 
-export const theme = createTheme({
+let theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
@@ -94,7 +94,12 @@ export const theme = createTheme({
           fontSize: '0.875rem',
           fontWeight: 600,
           boxShadow: 'none',
+          minHeight: 44, // tap target mínimo para mobile
           '&:hover': { boxShadow: 'none' },
+        },
+        sizeSmall: {
+          minHeight: 36,
+          padding: '6px 14px',
         },
         containedPrimary: {
           background: '#1A1A2E',
@@ -103,6 +108,14 @@ export const theme = createTheme({
         containedSecondary: {
           background: '#F97316',
           '&:hover': { background: '#EA580C' },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          minWidth: 40,
+          minHeight: 40, // tap target mínimo
         },
       },
     },
@@ -176,5 +189,22 @@ export const theme = createTheme({
         },
       },
     },
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          paddingLeft: 16,
+          paddingRight: 16,
+          '@media (min-width: 600px)': {
+            paddingLeft: 24,
+            paddingRight: 24,
+          },
+        },
+      },
+    },
   },
 })
+
+// Escala fontes automaticamente para telas menores
+theme = responsiveFontSizes(theme, { factor: 2.5 })
+
+export { theme }

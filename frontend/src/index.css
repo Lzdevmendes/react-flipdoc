@@ -1,11 +1,16 @@
-* {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* remove flash ao tocar em mobile */
 }
 
 html {
   scroll-behavior: smooth;
+  /* Previne zoom indesejado ao focar inputs em iOS */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -14,14 +19,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #FAFAF9;
   min-height: 100vh;
+  min-height: 100dvh; /* dynamic viewport height — corrige barra de URL mobile */
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 code {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Melhora rolagem em iOS */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Garante que inputs não causem zoom em iOS (font-size mínimo 16px) */
+input, select, textarea {
+  font-size: max(16px, 1em);
 }
 
 /* Animações */
@@ -32,27 +50,27 @@ code {
 
 @keyframes slideInUp {
   from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  to   { transform: rotate(360deg); }
 }
 
 @keyframes shimmer {
-  0% { background-position: -600px 0; }
-  100% { background-position: 600px 0; }
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
 }
 
 @keyframes dotPulse {
   0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
+  40%           { opacity: 1;   transform: scale(1);   }
 }
 
 .animate-slideInUp {
@@ -61,4 +79,11 @@ code {
 
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-in;
+}
+
+/* Safe area para dispositivos com notch (iPhone X+) */
+@supports (padding: max(0px)) {
+  .safe-area-pb {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
 }
