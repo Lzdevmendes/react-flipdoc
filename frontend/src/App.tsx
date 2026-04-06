@@ -58,14 +58,12 @@ function Navigation() {
             </Typography>
           </Box>
 
-          {/* Oculta texto e badge em telas muito pequenas */}
           <Typography
             variant="h6"
             sx={{
-              display: { xs: 'none', sm: 'block' },
               fontWeight: 700,
               color: '#18181B',
-              fontSize: '0.975rem',
+              fontSize: { xs: '0.875rem', sm: '0.975rem' },
               letterSpacing: '-0.02em',
             }}
           >
@@ -106,25 +104,17 @@ function Navigation() {
           }}
         >
           <Tab
-            icon={<UploadIcon sx={{ fontSize: { xs: 20, sm: 16 } }} />}
+            icon={<UploadIcon sx={{ fontSize: { xs: 17, sm: 16 } }} />}
             iconPosition="start"
-            label={
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                Converter
-              </Box>
-            }
+            label="Converter"
             component={RouterLink}
             to="/"
             aria-label="Converter documento"
           />
           <Tab
-            icon={<HistoryIcon sx={{ fontSize: { xs: 20, sm: 16 } }} />}
+            icon={<HistoryIcon sx={{ fontSize: { xs: 17, sm: 16 } }} />}
             iconPosition="start"
-            label={
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                Histórico
-              </Box>
-            }
+            label="Histórico"
             component={RouterLink}
             to="/history"
             aria-label="Histórico de conversões"
