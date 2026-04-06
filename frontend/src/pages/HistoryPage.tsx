@@ -23,11 +23,13 @@ import {
   Alert,
   TableSortLabel,
   InputAdornment,
+  Skeleton,
 } from '@mui/material'
 import {
   Download as DownloadIcon,
   Refresh as RefreshIcon,
   Search as SearchIcon,
+  InsertDriveFile as FileIcon,
 } from '@mui/icons-material'
 import axios from 'axios'
 
@@ -69,6 +71,17 @@ const formatColors: Record<string, string> = {
   txt:  '#059669',
 }
 
+function formatRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now  = new Date()
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (diff < 60)   return 'agora mesmo'
+  if (diff < 3600) return `há ${Math.floor(diff / 60)}min`
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
+  return date.toLocaleDateString('pt-BR')
+}
+
 function StatusBadge({ status }: { status: JobStatus }) {
   const cfg = statusConfig[status]
   return (
@@ -107,15 +120,161 @@ function FormatBadge({ format }: { format: string }) {
   )
 }
 
+// ── Card mobile ───────────────────────────────────────────────────────────────
+
+function JobCard({ job }: { job: Job }) {
+  const color = formatColors[job.target_format.toLowerCase()] || '#6B7280'
+
+  return (
+    <Paper
+      elevation={0}
+      className="animate-fadeIn"
+      sx={{
+        border: '1px solid #E4E4E7',
+        borderRadius: '12px',
+        p: 2,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
+        '&:hover': { borderColor: '#D4D4D8', bgcolor: '#FAFAF9' },
+        transition: 'all 0.15s ease',
+      }}
+    >
+      {/* Ícone do formato */}
+      <Box
+        sx={{
+          width: 44,
+          height: 44,
+          borderRadius: '10px',
+          bgcolor: `${color}10`,
+          border: `1.5px solid ${color}30`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Typography
+          sx={{
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: '0.6rem',
+            color,
+            fontWeight: 700,
+            lineHeight: 1,
+            opacity: 0.7,
+          }}
+        >
+          .{job.target_format}
+        </Typography>
+        <FileIcon sx={{ fontSize: 14, color, mt: 0.25 }} />
+      </Box>
+
+      {/* Informações */}
+      <Box sx={{ flex: 1, overflow: 'hidden' }}>
+        <Typography
+          sx={{
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            color: '#18181B',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            mb: 0.5,
+          }}
+        >
+          {job.original_name}
+        </Typography>
+        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+          <StatusBadge status={job.status} />
+          <Typography sx={{ fontSize: '0.7rem', color: '#A1A1AA', fontFamily: '"JetBrains Mono", monospace' }}>
+            {formatRelativeDate(job.created_at)}
+          </Typography>
+        </Stack>
+      </Box>
+
+      {/* Download */}
+      {job.status === 'done' && (
+        <Tooltip title="Baixar arquivo">
+          <IconButton
+            size="small"
+            href={`/api/jobs/${job.id}/download`}
+            aria-label={`Baixar ${job.original_name}`}
+            sx={{
+              border: '1px solid #E4E4E7',
+              borderRadius: '8px',
+              color: '#71717A',
+              flexShrink: 0,
+              minWidth: 36,
+              minHeight: 36,
+              '&:hover': { bgcolor: '#F0FDF4', borderColor: '#BBF7D0', color: '#16A34A' },
+            }}
+          >
+            <DownloadIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Tooltip>
+      )}
+    </Paper>
+  )
+}
+
+// ── Skeleton de carregamento ──────────────────────────────────────────────────
+
+function SkeletonCards() {
+  return (
+    <Stack spacing={1.5}>
+      {[...Array(5)].map((_, i) => (
+        <Paper
+          key={i}
+          elevation={0}
+          sx={{ border: '1px solid #E4E4E7', borderRadius: '12px', p: 2, display: 'flex', gap: 1.5 }}
+        >
+          <Skeleton variant="rectangular" width={44} height={44} sx={{ borderRadius: '10px', flexShrink: 0 }} />
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width="65%" height={20} sx={{ mb: 0.75 }} />
+            <Skeleton variant="text" width="40%" height={16} />
+          </Box>
+        </Paper>
+      ))}
+    </Stack>
+  )
+}
+
+function SkeletonTable() {
+  return (
+    <Paper elevation={0} sx={{ border: '1px solid #E4E4E7', borderRadius: '12px', overflow: 'hidden' }}>
+      <Box sx={{ p: 0 }}>
+        {[...Array(6)].map((_, i) => (
+          <Box
+            key={i}
+            sx={{
+              display: 'flex', gap: 3, px: 2.5, py: 1.75,
+              borderBottom: i < 5 ? '1px solid #F4F4F5' : 'none',
+              alignItems: 'center',
+            }}
+          >
+            <Skeleton variant="text" width="35%" height={18} />
+            <Skeleton variant="rectangular" width={48} height={22} sx={{ borderRadius: '100px' }} />
+            <Skeleton variant="rectangular" width={72} height={22} sx={{ borderRadius: '100px' }} />
+            <Skeleton variant="text" width="12%" height={18} sx={{ ml: 'auto' }} />
+          </Box>
+        ))}
+      </Box>
+    </Paper>
+  )
+}
+
+// ── Página principal ──────────────────────────────────────────────────────────
+
 export default function HistoryPage() {
-  const [page, setPage] = useState(0)
+  const [page, setPage]               = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all')
-  const [orderBy, setOrderBy] = useState<'created_at' | 'original_name'>('created_at')
-  const [order, setOrder] = useState<'asc' | 'desc'>('desc')
+  const [orderBy, setOrderBy]         = useState<'created_at' | 'original_name'>('created_at')
+  const [order, setOrder]             = useState<'asc' | 'desc'>('desc')
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['jobs', page, rowsPerPage],
     queryFn: () => fetchJobs(rowsPerPage, page * rowsPerPage),
     refetchInterval: 5000,
@@ -130,17 +289,15 @@ export default function HistoryPage() {
         job.original_name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
-
     if (statusFilter !== 'all') {
       filtered = filtered.filter((job) => job.status === statusFilter)
     }
 
     filtered.sort((a, b) => {
-      const aValue = orderBy === 'created_at' ? new Date(a.created_at).getTime() : a.original_name
-      const bValue = orderBy === 'created_at' ? new Date(b.created_at).getTime() : b.original_name
-      return order === 'asc' ? (aValue > bValue ? 1 : -1) : aValue < bValue ? 1 : -1
+      const av = orderBy === 'created_at' ? new Date(a.created_at).getTime() : a.original_name
+      const bv = orderBy === 'created_at' ? new Date(b.created_at).getTime() : b.original_name
+      return order === 'asc' ? (av > bv ? 1 : -1) : av < bv ? 1 : -1
     })
-
     return filtered
   }, [data?.jobs, searchQuery, statusFilter, orderBy, order])
 
@@ -165,18 +322,23 @@ export default function HistoryPage() {
         <Box>
           <Typography
             variant="h2"
-            sx={{
-              color: '#18181B',
-              mb: 0.5,
-              fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
-            }}
+            sx={{ color: '#18181B', mb: 0.5, fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}
           >
             Histórico
           </Typography>
-          <Typography variant="body2" sx={{ color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-            {data?.total ?? 0} conversões realizadas
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography
+              variant="body2"
+              sx={{ color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            >
+              {data?.total ?? 0} conversões realizadas
+            </Typography>
+            {isFetching && !isLoading && (
+              <CircularProgress size={12} sx={{ color: '#A1A1AA' }} />
+            )}
+          </Stack>
         </Box>
+
         <Tooltip title="Atualizar">
           <IconButton
             onClick={() => refetch()}
@@ -213,7 +375,6 @@ export default function HistoryPage() {
             sx: { bgcolor: '#FFFFFF', borderRadius: '8px', fontSize: '0.875rem' },
           }}
         />
-
         <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 }, flexShrink: 0 }}>
           <Select
             value={statusFilter}
@@ -226,20 +387,25 @@ export default function HistoryPage() {
               color: statusFilter === 'all' ? '#71717A' : '#18181B',
             }}
           >
-            <MenuItem value="all"       sx={{ fontSize: '0.875rem' }}>Todos os status</MenuItem>
-            <MenuItem value="pending"   sx={{ fontSize: '0.875rem' }}>Pendente</MenuItem>
+            <MenuItem value="all"        sx={{ fontSize: '0.875rem' }}>Todos os status</MenuItem>
+            <MenuItem value="pending"    sx={{ fontSize: '0.875rem' }}>Pendente</MenuItem>
             <MenuItem value="processing" sx={{ fontSize: '0.875rem' }}>Processando</MenuItem>
-            <MenuItem value="done"      sx={{ fontSize: '0.875rem' }}>Concluído</MenuItem>
-            <MenuItem value="failed"    sx={{ fontSize: '0.875rem' }}>Falhou</MenuItem>
+            <MenuItem value="done"       sx={{ fontSize: '0.875rem' }}>Concluído</MenuItem>
+            <MenuItem value="failed"     sx={{ fontSize: '0.875rem' }}>Falhou</MenuItem>
           </Select>
         </FormControl>
       </Stack>
 
-      {/* Loading */}
+      {/* Loading skeleton */}
       {isLoading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
-          <CircularProgress size={32} sx={{ color: '#F97316' }} />
-        </Box>
+        <>
+          <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+            <SkeletonCards />
+          </Box>
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+            <SkeletonTable />
+          </Box>
+        </>
       )}
 
       {/* Erro */}
@@ -263,10 +429,31 @@ export default function HistoryPage() {
             bgcolor: '#FAFAF9',
           }}
         >
-          <Typography sx={{ fontWeight: 600, color: '#18181B', mb: 0.75, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+          <Box
+            sx={{
+              width: 52,
+              height: 52,
+              borderRadius: '14px',
+              bgcolor: '#F4F4F5',
+              border: '1px solid #E4E4E7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+            }}
+          >
+            <FileIcon sx={{ fontSize: 24, color: '#A1A1AA' }} />
+          </Box>
+          <Typography
+            sx={{ fontWeight: 600, color: '#18181B', mb: 0.75, fontSize: { xs: '0.9rem', sm: '1rem' } }}
+          >
             Nenhuma conversão encontrada
           </Typography>
-          <Typography variant="body2" sx={{ color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+          <Typography
+            variant="body2"
+            sx={{ color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+          >
             {searchQuery || statusFilter !== 'all'
               ? 'Tente ajustar os filtros'
               : 'Faça o upload de um documento para começar'}
@@ -274,177 +461,155 @@ export default function HistoryPage() {
         </Box>
       )}
 
-      {/* Tabela */}
+      {/* Conteúdo */}
       {!isLoading && !isError && filteredJobs.length > 0 && (
         <>
-          <TableContainer
-            component={Paper}
-            elevation={0}
-            sx={{
-              border: '1px solid #E4E4E7',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              overflowX: 'auto', // scroll horizontal em mobile
-              WebkitOverflowScrolling: 'touch',
-            }}
-          >
-            <Table sx={{ minWidth: 500 }}>
-              <TableHead>
-                <TableRow sx={{ bgcolor: '#FAFAF9' }}>
-                  <TableCell>
-                    <TableSortLabel
-                      active={orderBy === 'original_name'}
-                      direction={orderBy === 'original_name' ? order : 'asc'}
-                      onClick={() => handleSort('original_name')}
-                    >
-                      Arquivo
-                    </TableSortLabel>
-                  </TableCell>
+          {/* ── Mobile: cards ─────────────────────────────────── */}
+          <Stack spacing={1.5} sx={{ display: { xs: 'flex', md: 'none' } }}>
+            {filteredJobs.map((job) => <JobCard key={job.id} job={job} />)}
+          </Stack>
 
-                  {/* Oculto em mobile */}
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Formato</TableCell>
-
-                  <TableCell>Status</TableCell>
-
-                  {/* Oculto em mobile */}
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                    <TableSortLabel
-                      active={orderBy === 'created_at'}
-                      direction={orderBy === 'created_at' ? order : 'asc'}
-                      onClick={() => handleSort('created_at')}
-                    >
-                      Data
-                    </TableSortLabel>
-                  </TableCell>
-
-                  <TableCell align="right">Download</TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {filteredJobs.map((job) => (
-                  <TableRow
-                    key={job.id}
-                    sx={{
-                      '&:hover': { bgcolor: '#FAFAF9' },
-                      '&:last-child td': { borderBottom: 'none' },
-                    }}
-                  >
-                    <TableCell sx={{ maxWidth: { xs: 140, sm: 240, md: 'none' } }}>
-                      <Typography
-                        sx={{
-                          fontWeight: 500,
-                          fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                          color: '#18181B',
-                          mb: 0.25,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
+          {/* ── Desktop: tabela ───────────────────────────────── */}
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+            <TableContainer
+              component={Paper}
+              elevation={0}
+              sx={{
+                border: '1px solid #E4E4E7',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                overflowX: 'auto',
+              }}
+            >
+              <Table sx={{ minWidth: 500 }}>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#FAFAF9' }}>
+                    <TableCell>
+                      <TableSortLabel
+                        active={orderBy === 'original_name'}
+                        direction={orderBy === 'original_name' ? order : 'asc'}
+                        onClick={() => handleSort('original_name')}
                       >
-                        {job.original_name}
-                      </Typography>
-                      {/* Em mobile mostra o formato inline */}
-                      <Stack
-                        direction="row"
-                        spacing={0.75}
-                        alignItems="center"
-                        sx={{ display: { xs: 'flex', sm: 'none' } }}
+                        Arquivo
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell>Formato</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>
+                      <TableSortLabel
+                        active={orderBy === 'created_at'}
+                        direction={orderBy === 'created_at' ? order : 'asc'}
+                        onClick={() => handleSort('created_at')}
                       >
-                        <FormatBadge format={job.target_format} />
+                        Data
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="right">Download</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredJobs.map((job) => (
+                    <TableRow
+                      key={job.id}
+                      sx={{
+                        '&:hover': { bgcolor: '#FAFAF9' },
+                        '&:last-child td': { borderBottom: 'none' },
+                      }}
+                    >
+                      <TableCell sx={{ maxWidth: 260 }}>
+                        <Typography
+                          sx={{
+                            fontWeight: 500,
+                            fontSize: '0.875rem',
+                            color: '#18181B',
+                            mb: 0.25,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {job.original_name}
+                        </Typography>
                         <Typography
                           sx={{
                             fontFamily: '"JetBrains Mono", monospace',
-                            fontSize: '0.65rem',
+                            fontSize: '0.68rem',
                             color: '#A1A1AA',
                           }}
                         >
-                          {job.id.slice(0, 6)}…
+                          {job.id.slice(0, 8)}...
                         </Typography>
-                      </Stack>
-                      <Typography
-                        sx={{
-                          fontFamily: '"JetBrains Mono", monospace',
-                          fontSize: '0.68rem',
-                          color: '#A1A1AA',
-                          display: { xs: 'none', sm: 'block' },
-                        }}
-                      >
-                        {job.id.slice(0, 8)}...
-                      </Typography>
-                    </TableCell>
+                      </TableCell>
 
-                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                      <FormatBadge format={job.target_format} />
-                    </TableCell>
+                      <TableCell>
+                        <FormatBadge format={job.target_format} />
+                      </TableCell>
 
-                    <TableCell>
-                      <StatusBadge status={job.status} />
-                    </TableCell>
+                      <TableCell>
+                        <StatusBadge status={job.status} />
+                      </TableCell>
 
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                      <Typography sx={{ fontSize: '0.8125rem', color: '#18181B', mb: 0.125 }}>
-                        {new Date(job.created_at).toLocaleDateString('pt-BR')}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: '"JetBrains Mono", monospace',
-                          fontSize: '0.7rem',
-                          color: '#A1A1AA',
-                        }}
-                      >
-                        {new Date(job.created_at).toLocaleTimeString('pt-BR')}
-                      </Typography>
-                    </TableCell>
+                      <TableCell>
+                        <Typography sx={{ fontSize: '0.8125rem', color: '#18181B', mb: 0.125 }}>
+                          {new Date(job.created_at).toLocaleDateString('pt-BR')}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontFamily: '"JetBrains Mono", monospace',
+                            fontSize: '0.7rem',
+                            color: '#A1A1AA',
+                          }}
+                        >
+                          {new Date(job.created_at).toLocaleTimeString('pt-BR')}
+                        </Typography>
+                      </TableCell>
 
-                    <TableCell align="right">
-                      {job.status === 'done' && job.download_path && (
-                        <Tooltip title="Baixar arquivo">
-                          <IconButton
-                            size="small"
-                            href={`/api/jobs/${job.id}/download`}
-                            aria-label={`Baixar ${job.original_name}`}
-                            sx={{
-                              border: '1px solid #E4E4E7',
-                              borderRadius: '7px',
-                              color: '#71717A',
-                              minWidth: 36,
-                              minHeight: 36,
-                              '&:hover': {
-                                bgcolor: '#F0FDF4',
-                                borderColor: '#BBF7D0',
-                                color: '#16A34A',
-                              },
-                            }}
-                          >
-                            <DownloadIcon sx={{ fontSize: 16 }} />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      <TableCell align="right">
+                        {job.status === 'done' && (
+                          <Tooltip title="Baixar arquivo">
+                            <IconButton
+                              size="small"
+                              href={`/api/jobs/${job.id}/download`}
+                              aria-label={`Baixar ${job.original_name}`}
+                              sx={{
+                                border: '1px solid #E4E4E7',
+                                borderRadius: '7px',
+                                color: '#71717A',
+                                minWidth: 36,
+                                minHeight: 36,
+                                '&:hover': { bgcolor: '#F0FDF4', borderColor: '#BBF7D0', color: '#16A34A' },
+                              }}
+                            >
+                              <DownloadIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
 
+          {/* Paginação */}
           <TablePagination
             component="div"
             count={data?.total || 0}
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10))
-              setPage(0)
-            }}
+            onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0) }}
             rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage={<Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Por página</Box>}
+            labelRowsPerPage={
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                Por página
+              </Box>
+            }
             labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
             sx={{
               mt: 0.5,
               color: '#71717A',
-              fontSize: '0.8125rem',
               '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
                 fontSize: { xs: '0.75rem', sm: '0.8125rem' },
               },
