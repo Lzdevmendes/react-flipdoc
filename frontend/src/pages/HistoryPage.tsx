@@ -30,6 +30,9 @@ import {
   Refresh as RefreshIcon,
   Search as SearchIcon,
   InsertDriveFile as FileIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  Schedule as PendingIcon,
 } from '@mui/icons-material'
 import axios from 'axios'
 
@@ -76,8 +79,8 @@ function formatRelativeDate(dateStr: string): string {
   const now  = new Date()
   const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-  if (diff < 60)   return 'agora mesmo'
-  if (diff < 3600) return `há ${Math.floor(diff / 60)}min`
+  if (diff < 60)    return 'agora mesmo'
+  if (diff < 3600)  return `há ${Math.floor(diff / 60)}min`
   if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
   return date.toLocaleDateString('pt-BR')
 }
@@ -90,12 +93,13 @@ function StatusBadge({ status }: { status: JobStatus }) {
       size="small"
       sx={{
         height: 22,
-        fontSize: '0.72rem',
+        fontSize: '0.7rem',
         fontWeight: 600,
         fontFamily: '"JetBrains Mono", monospace',
         bgcolor: cfg.bg,
         color: cfg.color,
         border: 'none',
+        borderRadius: '6px',
       }}
     />
   )
@@ -109,14 +113,63 @@ function FormatBadge({ format }: { format: string }) {
       size="small"
       sx={{
         height: 22,
-        fontSize: '0.7rem',
-        fontWeight: 600,
+        fontSize: '0.68rem',
+        fontWeight: 700,
         fontFamily: '"JetBrains Mono", monospace',
-        bgcolor: `${color}12`,
+        bgcolor: `${color}10`,
         color,
-        border: `1px solid ${color}30`,
+        border: `1px solid ${color}28`,
+        borderRadius: '6px',
       }}
     />
+  )
+}
+
+// ── Stats resumo ──────────────────────────────────────────────────────────────
+
+function StatsRow({ jobs }: { jobs: Job[] }) {
+  const done    = jobs.filter((j) => j.status === 'done').length
+  const failed  = jobs.filter((j) => j.status === 'failed').length
+  const pending = jobs.filter((j) => j.status === 'pending' || j.status === 'processing').length
+
+  if (jobs.length === 0) return null
+
+  return (
+    <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 2.5, gap: 1 }}>
+      {done > 0 && (
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{
+          px: 1.25, py: 0.5, borderRadius: '8px',
+          bgcolor: '#F0FDF4', border: '1px solid #BBF7D0',
+        }}>
+          <CheckCircleIcon sx={{ fontSize: 13, color: '#16A34A' }} />
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#15803D', fontFamily: '"JetBrains Mono", monospace' }}>
+            {done} concluído{done > 1 ? 's' : ''}
+          </Typography>
+        </Stack>
+      )}
+      {failed > 0 && (
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{
+          px: 1.25, py: 0.5, borderRadius: '8px',
+          bgcolor: '#FEF2F2', border: '1px solid #FECACA',
+        }}>
+          <ErrorIcon sx={{ fontSize: 13, color: '#DC2626' }} />
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#DC2626', fontFamily: '"JetBrains Mono", monospace' }}>
+            {failed} falhado{failed > 1 ? 's' : ''}
+          </Typography>
+        </Stack>
+      )}
+      {pending > 0 && (
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{
+          px: 1.25, py: 0.5, borderRadius: '8px',
+          bgcolor: '#EFF6FF', border: '1px solid #BFDBFE',
+        }}>
+          <PendingIcon sx={{ fontSize: 13, color: '#2563EB' }} />
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#2563EB', fontFamily: '"JetBrains Mono", monospace' }}>
+            {pending} em andamento
+          </Typography>
+        </Stack>
+      )}
+    </Stack>
   )
 }
 
@@ -131,63 +184,66 @@ function JobCard({ job }: { job: Job }) {
       className="animate-fadeIn"
       sx={{
         border: '1px solid #E4E4E7',
-        borderRadius: '12px',
-        p: 2,
+        borderRadius: '14px',
+        p: { xs: 1.75, sm: 2 },
         display: 'flex',
         alignItems: 'center',
-        gap: 1.5,
-        '&:hover': { borderColor: '#D4D4D8', bgcolor: '#FAFAF9' },
+        gap: 1.75,
         transition: 'all 0.15s ease',
+        '&:hover': { borderColor: '#D4D4D8', bgcolor: '#FAFAF9' },
       }}
     >
       {/* Ícone do formato */}
       <Box
         sx={{
-          width: 44,
-          height: 44,
-          borderRadius: '10px',
-          bgcolor: `${color}10`,
-          border: `1.5px solid ${color}30`,
+          width: 46,
+          height: 46,
+          borderRadius: '11px',
+          bgcolor: `${color}0D`,
+          border: `1.5px solid ${color}28`,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
+          gap: 0.25,
         }}
       >
         <Typography
           sx={{
             fontFamily: '"JetBrains Mono", monospace',
-            fontSize: '0.6rem',
+            fontSize: '0.55rem',
             color,
             fontWeight: 700,
             lineHeight: 1,
-            opacity: 0.7,
+            opacity: 0.65,
           }}
         >
           .{job.target_format}
         </Typography>
-        <FileIcon sx={{ fontSize: 14, color, mt: 0.25 }} />
+        <FileIcon sx={{ fontSize: 15, color, opacity: 0.85 }} />
       </Box>
 
       {/* Informações */}
-      <Box sx={{ flex: 1, overflow: 'hidden' }}>
+      <Box sx={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
         <Typography
           sx={{
             fontWeight: 600,
-            fontSize: '0.875rem',
+            fontSize: { xs: '0.85rem', sm: '0.875rem' },
             color: '#18181B',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            mb: 0.5,
+            mb: 0.625,
+            lineHeight: 1.3,
           }}
         >
           {job.original_name}
         </Typography>
-        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
           <StatusBadge status={job.status} />
-          <Typography sx={{ fontSize: '0.7rem', color: '#A1A1AA', fontFamily: '"JetBrains Mono", monospace' }}>
+          <FormatBadge format={job.target_format} />
+          <Typography sx={{ fontSize: '0.68rem', color: '#B4B4B8', fontFamily: '"JetBrains Mono", monospace' }}>
             {formatRelativeDate(job.created_at)}
           </Typography>
         </Stack>
@@ -195,22 +251,22 @@ function JobCard({ job }: { job: Job }) {
 
       {/* Download */}
       {job.status === 'done' && (
-        <Tooltip title="Baixar arquivo">
+        <Tooltip title="Baixar arquivo" placement="left">
           <IconButton
             size="small"
             href={`/api/jobs/${job.id}/download`}
             aria-label={`Baixar ${job.original_name}`}
             sx={{
               border: '1px solid #E4E4E7',
-              borderRadius: '8px',
+              borderRadius: '10px',
               color: '#71717A',
               flexShrink: 0,
-              minWidth: 36,
-              minHeight: 36,
-              '&:hover': { bgcolor: '#F0FDF4', borderColor: '#BBF7D0', color: '#16A34A' },
+              minWidth: 38,
+              minHeight: 38,
+              '&:hover': { bgcolor: '#F0FDF4', borderColor: '#86EFAC', color: '#16A34A' },
             }}
           >
-            <DownloadIcon sx={{ fontSize: 16 }} />
+            <DownloadIcon sx={{ fontSize: 17 }} />
           </IconButton>
         </Tooltip>
       )}
@@ -218,7 +274,7 @@ function JobCard({ job }: { job: Job }) {
   )
 }
 
-// ── Skeleton de carregamento ──────────────────────────────────────────────────
+// ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function SkeletonCards() {
   return (
@@ -227,12 +283,15 @@ function SkeletonCards() {
         <Paper
           key={i}
           elevation={0}
-          sx={{ border: '1px solid #E4E4E7', borderRadius: '12px', p: 2, display: 'flex', gap: 1.5 }}
+          sx={{ border: '1px solid #E4E4E7', borderRadius: '14px', p: 1.75, display: 'flex', gap: 1.75, alignItems: 'center' }}
         >
-          <Skeleton variant="rectangular" width={44} height={44} sx={{ borderRadius: '10px', flexShrink: 0 }} />
+          <Skeleton variant="rectangular" width={46} height={46} sx={{ borderRadius: '11px', flexShrink: 0 }} />
           <Box sx={{ flex: 1 }}>
-            <Skeleton variant="text" width="65%" height={20} sx={{ mb: 0.75 }} />
-            <Skeleton variant="text" width="40%" height={16} />
+            <Skeleton variant="text" width="60%" height={18} sx={{ mb: 0.75 }} />
+            <Stack direction="row" spacing={0.75}>
+              <Skeleton variant="rectangular" width={64} height={22} sx={{ borderRadius: '6px' }} />
+              <Skeleton variant="rectangular" width={44} height={22} sx={{ borderRadius: '6px' }} />
+            </Stack>
           </Box>
         </Paper>
       ))}
@@ -243,23 +302,21 @@ function SkeletonCards() {
 function SkeletonTable() {
   return (
     <Paper elevation={0} sx={{ border: '1px solid #E4E4E7', borderRadius: '12px', overflow: 'hidden' }}>
-      <Box sx={{ p: 0 }}>
-        {[...Array(6)].map((_, i) => (
-          <Box
-            key={i}
-            sx={{
-              display: 'flex', gap: 3, px: 2.5, py: 1.75,
-              borderBottom: i < 5 ? '1px solid #F4F4F5' : 'none',
-              alignItems: 'center',
-            }}
-          >
-            <Skeleton variant="text" width="35%" height={18} />
-            <Skeleton variant="rectangular" width={48} height={22} sx={{ borderRadius: '100px' }} />
-            <Skeleton variant="rectangular" width={72} height={22} sx={{ borderRadius: '100px' }} />
-            <Skeleton variant="text" width="12%" height={18} sx={{ ml: 'auto' }} />
-          </Box>
-        ))}
-      </Box>
+      {[...Array(6)].map((_, i) => (
+        <Box
+          key={i}
+          sx={{
+            display: 'flex', gap: 3, px: 2.5, py: 1.875,
+            borderBottom: i < 5 ? '1px solid #F4F4F5' : 'none',
+            alignItems: 'center',
+          }}
+        >
+          <Skeleton variant="text" width="38%" height={18} />
+          <Skeleton variant="rectangular" width={52} height={22} sx={{ borderRadius: '6px' }} />
+          <Skeleton variant="rectangular" width={76} height={22} sx={{ borderRadius: '6px' }} />
+          <Skeleton variant="text" width="10%" height={18} sx={{ ml: 'auto' }} />
+        </Box>
+      ))}
     </Paper>
   )
 }
@@ -315,14 +372,14 @@ export default function HistoryPage() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
-          mb: { xs: 3, sm: 4 },
+          mb: { xs: 3, sm: 3.5 },
           gap: 2,
         }}
       >
         <Box>
           <Typography
             variant="h2"
-            sx={{ color: '#18181B', mb: 0.5, fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}
+            sx={{ color: '#18181B', mb: 0.5, fontSize: { xs: '1.4rem', sm: '1.65rem', md: '1.875rem' } }}
           >
             Histórico
           </Typography>
@@ -334,32 +391,33 @@ export default function HistoryPage() {
               {data?.total ?? 0} conversões realizadas
             </Typography>
             {isFetching && !isLoading && (
-              <CircularProgress size={12} sx={{ color: '#A1A1AA' }} />
+              <CircularProgress size={11} sx={{ color: '#D4D4D8' }} />
             )}
           </Stack>
         </Box>
 
-        <Tooltip title="Atualizar">
+        <Tooltip title="Atualizar lista">
           <IconButton
             onClick={() => refetch()}
             size="small"
             aria-label="Atualizar lista"
             sx={{
               border: '1px solid #E4E4E7',
-              borderRadius: '8px',
+              borderRadius: '9px',
               color: '#71717A',
               minWidth: 40,
               minHeight: 40,
+              flexShrink: 0,
               '&:hover': { bgcolor: '#F4F4F5', color: '#18181B' },
             }}
           >
-            <RefreshIcon sx={{ fontSize: 18 }} />
+            <RefreshIcon sx={{ fontSize: 17 }} />
           </IconButton>
         </Tooltip>
       </Box>
 
       {/* Filtros */}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 3 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ mb: 2.5 }}>
         <TextField
           fullWidth
           size="small"
@@ -369,22 +427,28 @@ export default function HistoryPage() {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ fontSize: 16, color: '#A1A1AA' }} />
+                <SearchIcon sx={{ fontSize: 15, color: '#C4C4C8' }} />
               </InputAdornment>
             ),
-            sx: { bgcolor: '#FFFFFF', borderRadius: '8px', fontSize: '0.875rem' },
+            sx: {
+              bgcolor: '#FFFFFF',
+              borderRadius: '9px',
+              fontSize: '0.875rem',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E4E4E7' },
+            },
           }}
         />
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 }, flexShrink: 0 }}>
+        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 156 }, flexShrink: 0 }}>
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as JobStatus | 'all')}
             displayEmpty
             sx={{
               bgcolor: '#FFFFFF',
-              borderRadius: '8px',
+              borderRadius: '9px',
               fontSize: '0.875rem',
-              color: statusFilter === 'all' ? '#71717A' : '#18181B',
+              color: statusFilter === 'all' ? '#A1A1AA' : '#18181B',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E4E4E7' },
             }}
           >
             <MenuItem value="all"        sx={{ fontSize: '0.875rem' }}>Todos os status</MenuItem>
@@ -423,17 +487,17 @@ export default function HistoryPage() {
         <Box
           sx={{
             textAlign: 'center',
-            py: { xs: 6, sm: 10 },
+            py: { xs: 7, sm: 10 },
             border: '1px dashed #E4E4E7',
-            borderRadius: '14px',
+            borderRadius: '16px',
             bgcolor: '#FAFAF9',
           }}
         >
           <Box
             sx={{
-              width: 52,
-              height: 52,
-              borderRadius: '14px',
+              width: 56,
+              height: 56,
+              borderRadius: '16px',
               bgcolor: '#F4F4F5',
               border: '1px solid #E4E4E7',
               display: 'flex',
@@ -443,19 +507,19 @@ export default function HistoryPage() {
               mb: 2,
             }}
           >
-            <FileIcon sx={{ fontSize: 24, color: '#A1A1AA' }} />
+            <FileIcon sx={{ fontSize: 26, color: '#C4C4C8' }} />
           </Box>
           <Typography
-            sx={{ fontWeight: 600, color: '#18181B', mb: 0.75, fontSize: { xs: '0.9rem', sm: '1rem' } }}
+            sx={{ fontWeight: 700, color: '#18181B', mb: 0.75, fontSize: { xs: '0.9375rem', sm: '1rem' } }}
           >
-            Nenhuma conversão encontrada
+            {searchQuery || statusFilter !== 'all' ? 'Nenhum resultado' : 'Nenhuma conversão ainda'}
           </Typography>
           <Typography
             variant="body2"
-            sx={{ color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+            sx={{ color: '#A1A1AA', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
           >
             {searchQuery || statusFilter !== 'all'
-              ? 'Tente ajustar os filtros'
+              ? 'Tente ajustar os filtros de busca'
               : 'Faça o upload de um documento para começar'}
           </Typography>
         </Box>
@@ -464,8 +528,11 @@ export default function HistoryPage() {
       {/* Conteúdo */}
       {!isLoading && !isError && filteredJobs.length > 0 && (
         <>
+          {/* Resumo de stats */}
+          <StatsRow jobs={filteredJobs} />
+
           {/* ── Mobile: cards ─────────────────────────────────── */}
-          <Stack spacing={1.5} sx={{ display: { xs: 'flex', md: 'none' } }}>
+          <Stack spacing={1.25} sx={{ display: { xs: 'flex', md: 'none' } }}>
             {filteredJobs.map((job) => <JobCard key={job.id} job={job} />)}
           </Stack>
 
@@ -476,15 +543,15 @@ export default function HistoryPage() {
               elevation={0}
               sx={{
                 border: '1px solid #E4E4E7',
-                borderRadius: '12px',
+                borderRadius: '14px',
                 overflow: 'hidden',
                 overflowX: 'auto',
               }}
             >
-              <Table sx={{ minWidth: 500 }}>
+              <Table sx={{ minWidth: 520 }}>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#FAFAF9' }}>
-                    <TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.8rem', color: '#71717A', py: 1.5 }}>
                       <TableSortLabel
                         active={orderBy === 'original_name'}
                         direction={orderBy === 'original_name' ? order : 'asc'}
@@ -493,9 +560,13 @@ export default function HistoryPage() {
                         Arquivo
                       </TableSortLabel>
                     </TableCell>
-                    <TableCell>Formato</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.8rem', color: '#71717A', py: 1.5 }}>
+                      Formato
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.8rem', color: '#71717A', py: 1.5 }}>
+                      Status
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.8rem', color: '#71717A', py: 1.5 }}>
                       <TableSortLabel
                         active={orderBy === 'created_at'}
                         direction={orderBy === 'created_at' ? order : 'asc'}
@@ -504,7 +575,9 @@ export default function HistoryPage() {
                         Data
                       </TableSortLabel>
                     </TableCell>
-                    <TableCell align="right">Download</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.8rem', color: '#71717A', py: 1.5 }}>
+                      Ação
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -514,9 +587,10 @@ export default function HistoryPage() {
                       sx={{
                         '&:hover': { bgcolor: '#FAFAF9' },
                         '&:last-child td': { borderBottom: 'none' },
+                        transition: 'background-color 0.1s ease',
                       }}
                     >
-                      <TableCell sx={{ maxWidth: 260 }}>
+                      <TableCell sx={{ maxWidth: 260, py: 1.5 }}>
                         <Typography
                           sx={{
                             fontWeight: 500,
@@ -533,38 +607,38 @@ export default function HistoryPage() {
                         <Typography
                           sx={{
                             fontFamily: '"JetBrains Mono", monospace',
-                            fontSize: '0.68rem',
-                            color: '#A1A1AA',
+                            fontSize: '0.65rem',
+                            color: '#C4C4C8',
                           }}
                         >
                           {job.id.slice(0, 8)}...
                         </Typography>
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell sx={{ py: 1.5 }}>
                         <FormatBadge format={job.target_format} />
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell sx={{ py: 1.5 }}>
                         <StatusBadge status={job.status} />
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell sx={{ py: 1.5 }}>
                         <Typography sx={{ fontSize: '0.8125rem', color: '#18181B', mb: 0.125 }}>
                           {new Date(job.created_at).toLocaleDateString('pt-BR')}
                         </Typography>
                         <Typography
                           sx={{
                             fontFamily: '"JetBrains Mono", monospace',
-                            fontSize: '0.7rem',
-                            color: '#A1A1AA',
+                            fontSize: '0.68rem',
+                            color: '#B4B4B8',
                           }}
                         >
-                          {new Date(job.created_at).toLocaleTimeString('pt-BR')}
+                          {new Date(job.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </Typography>
                       </TableCell>
 
-                      <TableCell align="right">
+                      <TableCell align="right" sx={{ py: 1.5 }}>
                         {job.status === 'done' && (
                           <Tooltip title="Baixar arquivo">
                             <IconButton
@@ -573,11 +647,11 @@ export default function HistoryPage() {
                               aria-label={`Baixar ${job.original_name}`}
                               sx={{
                                 border: '1px solid #E4E4E7',
-                                borderRadius: '7px',
+                                borderRadius: '8px',
                                 color: '#71717A',
                                 minWidth: 36,
                                 minHeight: 36,
-                                '&:hover': { bgcolor: '#F0FDF4', borderColor: '#BBF7D0', color: '#16A34A' },
+                                '&:hover': { bgcolor: '#F0FDF4', borderColor: '#86EFAC', color: '#16A34A' },
                               }}
                             >
                               <DownloadIcon sx={{ fontSize: 16 }} />
@@ -600,7 +674,7 @@ export default function HistoryPage() {
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0) }}
-            rowsPerPageOptions={[5, 10, 25, 50]}
+            rowsPerPageOptions={[5, 10, 25]}
             labelRowsPerPage={
               <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
                 Por página
@@ -611,8 +685,9 @@ export default function HistoryPage() {
               mt: 0.5,
               color: '#71717A',
               '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-                fontSize: { xs: '0.75rem', sm: '0.8125rem' },
+                fontSize: { xs: '0.72rem', sm: '0.8rem' },
               },
+              '& .MuiTablePagination-select': { fontSize: { xs: '0.72rem', sm: '0.8rem' } },
             }}
           />
         </>
