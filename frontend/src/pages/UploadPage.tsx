@@ -4,7 +4,6 @@ import {
   Typography,
   Paper,
   Alert,
-  LinearProgress,
   Button,
   Chip,
   Stack,
@@ -16,6 +15,7 @@ import {
   Error as ErrorIcon,
   ArrowForward as ArrowIcon,
   Refresh as RefreshIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material'
 import DropZone from '../components/DropZone'
 import FormatSelector, { TargetFormat } from '../components/FormatSelector'
@@ -23,17 +23,112 @@ import { useConversion } from '../hooks/useConversion'
 import { usePolling } from '../hooks/usePolling'
 
 const formatColors: Record<string, string> = {
-  pdf: '#DC2626',
+  pdf:  '#DC2626',
   docx: '#2563EB',
-  doc: '#2563EB',
-  md: '#7C3AED',
-  txt: '#059669',
-  odt: '#D97706',
+  doc:  '#2563EB',
+  md:   '#7C3AED',
+  txt:  '#059669',
+  odt:  '#D97706',
 }
 
 function getExt(filename: string) {
   return filename.split('.').pop()?.toLowerCase() || ''
 }
+
+// ── Indicador de etapas ───────────────────────────────────────────────────────
+
+type JobStatus = 'pending' | 'processing' | 'done' | 'failed'
+
+function StepIndicator({ status }: { status: JobStatus | null }) {
+  const steps = [
+    { label: 'Enviado' },
+    { label: 'Processando' },
+    { label: status === 'failed' ? 'Falhou' : 'Concluído' },
+  ]
+
+  const stepIndex =
+    status === 'pending'    ? 0 :
+    status === 'processing' ? 1 :
+    status === 'done' || status === 'failed' ? 2 : 0
+
+  const isFailed = status === 'failed'
+
+  return (
+    <Stack direction="row" alignItems="flex-start" sx={{ mb: 3 }}>
+      {steps.map((step, i) => {
+        const completed = i < stepIndex || (i === stepIndex && (status === 'done' || status === 'failed'))
+        const current   = i === stepIndex && status !== 'done' && status !== 'failed'
+        const failed    = isFailed && i === 2
+
+        const dotColor  = failed ? '#DC2626' : completed || current ? '#F97316' : '#D4D4D8'
+        const lineColor = i < stepIndex ? '#F97316' : '#E4E4E7'
+
+        return (
+          <React.Fragment key={step.label}>
+            {/* Etapa */}
+            <Stack alignItems="center" spacing={0.75}>
+              <Box
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  bgcolor: failed ? '#FEE2E2' : (completed || current) ? '#FFF7ED' : '#F4F4F5',
+                  border: '2px solid',
+                  borderColor: dotColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease',
+                  animation: current ? 'pulse 1.6s ease-in-out infinite' : 'none',
+                  flexShrink: 0,
+                }}
+              >
+                {failed && <CloseIcon sx={{ fontSize: 13, color: '#DC2626' }} />}
+                {!failed && completed && <CheckIcon sx={{ fontSize: 13, color: '#F97316' }} />}
+                {!failed && !completed && current && (
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#F97316' }} />
+                )}
+                {!failed && !completed && !current && (
+                  <Typography sx={{ fontSize: '0.68rem', color: '#A1A1AA', fontWeight: 700, lineHeight: 1 }}>
+                    {i + 1}
+                  </Typography>
+                )}
+              </Box>
+              <Typography
+                sx={{
+                  fontSize: '0.68rem',
+                  fontWeight: (completed || current) ? 600 : 400,
+                  color: failed ? '#DC2626' : (completed || current) ? '#F97316' : '#A1A1AA',
+                  whiteSpace: 'nowrap',
+                  transition: 'color 0.3s ease',
+                }}
+              >
+                {step.label}
+              </Typography>
+            </Stack>
+
+            {/* Linha conectora */}
+            {i < steps.length - 1 && (
+              <Box
+                sx={{
+                  flex: 1,
+                  height: 2,
+                  bgcolor: lineColor,
+                  mt: '13px', // alinha com centro do círculo
+                  mx: 0.5,
+                  transition: 'background-color 0.3s ease',
+                  borderRadius: 1,
+                }}
+              />
+            )}
+          </React.Fragment>
+        )
+      })}
+    </Stack>
+  )
+}
+
+// ── Badge de formato ──────────────────────────────────────────────────────────
 
 function FileFormatBadge({ label, ext }: { label: string; ext: string }) {
   const color = formatColors[ext] || '#6B7280'
@@ -63,16 +158,20 @@ function FileFormatBadge({ label, ext }: { label: string; ext: string }) {
       >
         {`.${ext}`}
       </Typography>
-      <Typography sx={{ fontWeight: 700, fontSize: { xs: '0.875rem', sm: '1rem' }, color, lineHeight: 1.3 }}>
+      <Typography
+        sx={{ fontWeight: 700, fontSize: { xs: '0.875rem', sm: '1rem' }, color, lineHeight: 1.3 }}
+      >
         {label}
       </Typography>
     </Box>
   )
 }
 
+// ── Página principal ──────────────────────────────────────────────────────────
+
 export default function UploadPage() {
   const [targetFormat, setTargetFormat] = useState<TargetFormat>('pdf')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFile, setSelectedFile]  = useState<File | null>(null)
   const { jobId, status, error, isUploading, startConversion, checkStatus, reset } = useConversion()
 
   usePolling(
@@ -83,16 +182,17 @@ export default function UploadPage() {
     !!jobId && status !== 'done' && status !== 'failed'
   )
 
-  const handleFileSelect = (file: File) => setSelectedFile(file)
-  const handleConvert = () => { if (selectedFile) startConversion(selectedFile, targetFormat) }
-  const handleReset = () => setSelectedFile(null)
+  const handleFileSelect    = (file: File) => setSelectedFile(file)
+  const handleConvert       = () => { if (selectedFile) startConversion(selectedFile, targetFormat) }
+  const handleReset         = () => setSelectedFile(null)
   const handleNewConversion = () => { reset(); setSelectedFile(null) }
 
-  const srcExt = selectedFile ? getExt(selectedFile.name) : ''
+  const srcExt   = selectedFile ? getExt(selectedFile.name) : ''
   const srcLabel = srcExt.toUpperCase()
 
   return (
     <Box sx={{ maxWidth: { xs: '100%', md: 720 }, mx: 'auto' }}>
+
       {/* Header */}
       <Box sx={{ mb: { xs: 3, sm: 5 } }}>
         <Typography
@@ -101,12 +201,15 @@ export default function UploadPage() {
         >
           Converter documento
         </Typography>
-        <Typography variant="body1" sx={{ color: '#71717A', fontSize: { xs: '0.875rem', md: '0.9375rem' } }}>
+        <Typography
+          variant="body1"
+          sx={{ color: '#71717A', fontSize: { xs: '0.875rem', md: '0.9375rem' } }}
+        >
           Transforme arquivos entre PDF, DOCX, Markdown e outros formatos.
         </Typography>
       </Box>
 
-      {/* Formato de destino (antes de selecionar arquivo) */}
+      {/* Seletor de formato (antes de selecionar arquivo) */}
       {!jobId && (
         <Box sx={{ mb: { xs: 3, sm: 4 } }}>
           <Typography
@@ -123,7 +226,11 @@ export default function UploadPage() {
           >
             Converter para
           </Typography>
-          <FormatSelector value={targetFormat} onChange={setTargetFormat} disabled={isUploading || !!jobId} />
+          <FormatSelector
+            value={targetFormat}
+            onChange={setTargetFormat}
+            disabled={isUploading || !!jobId}
+          />
         </Box>
       )}
 
@@ -206,7 +313,6 @@ export default function UploadPage() {
 
           {/* Conteúdo */}
           <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3.5 } }}>
-            {/* Badges de formato */}
             <Stack
               direction="row"
               spacing={{ xs: 1.5, sm: 2 }}
@@ -265,19 +371,25 @@ export default function UploadPage() {
           elevation={0}
           sx={{
             border: '1px solid',
-            borderColor: status === 'done' ? '#BBF7D0' : status === 'failed' ? '#FECACA' : '#E4E4E7',
+            borderColor:
+              status === 'done'   ? '#BBF7D0' :
+              status === 'failed' ? '#FECACA' : '#E4E4E7',
             borderRadius: '14px',
             overflow: 'hidden',
           }}
         >
-          {/* Header do status */}
+          {/* Header */}
           <Box
             sx={{
               px: { xs: 2, sm: 3 },
               py: { xs: 1.5, sm: 2 },
-              bgcolor: status === 'done' ? '#F0FDF4' : status === 'failed' ? '#FEF2F2' : '#F9F9F9',
+              bgcolor:
+                status === 'done'   ? '#F0FDF4' :
+                status === 'failed' ? '#FEF2F2' : '#F9F9F9',
               borderBottom: '1px solid',
-              borderColor: status === 'done' ? '#BBF7D0' : status === 'failed' ? '#FECACA' : '#E4E4E7',
+              borderColor:
+                status === 'done'   ? '#BBF7D0' :
+                status === 'failed' ? '#FECACA' : '#E4E4E7',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -294,10 +406,7 @@ export default function UploadPage() {
                     <Box
                       key={i}
                       sx={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: '50%',
-                        bgcolor: '#A1A1AA',
+                        width: 5, height: 5, borderRadius: '50%', bgcolor: '#A1A1AA',
                         animation: 'dotPulse 1.4s ease-in-out infinite',
                         animationDelay: `${i * 0.2}s`,
                       }}
@@ -309,18 +418,17 @@ export default function UploadPage() {
                 sx={{
                   fontWeight: 600,
                   fontSize: { xs: '0.8rem', sm: '0.875rem' },
-                  color: status === 'done' ? '#15803D' : status === 'failed' ? '#DC2626' : '#18181B',
+                  color:
+                    status === 'done'   ? '#15803D' :
+                    status === 'failed' ? '#DC2626' : '#18181B',
                 }}
               >
-                {status === 'done'
-                  ? 'Conversão concluída'
-                  : status === 'failed'
-                  ? 'Conversão falhou'
-                  : status === 'processing'
-                  ? 'Processando...'
-                  : 'Na fila...'}
+                {status === 'done'       ? 'Conversão concluída'  :
+                 status === 'failed'     ? 'Conversão falhou'      :
+                 status === 'processing' ? 'Processando...'        : 'Na fila...'}
               </Typography>
             </Stack>
+
             <Chip
               label={status}
               size="small"
@@ -329,23 +437,29 @@ export default function UploadPage() {
                 fontSize: '0.68rem',
                 height: 22,
                 bgcolor:
-                  status === 'done' ? '#DCFCE7' : status === 'failed' ? '#FEE2E2' : '#F4F4F5',
+                  status === 'done'   ? '#DCFCE7' :
+                  status === 'failed' ? '#FEE2E2' : '#F4F4F5',
                 color:
-                  status === 'done' ? '#15803D' : status === 'failed' ? '#DC2626' : '#71717A',
+                  status === 'done'   ? '#15803D' :
+                  status === 'failed' ? '#DC2626'  : '#71717A',
                 border: 'none',
                 fontWeight: 600,
               }}
             />
           </Box>
 
+          {/* Corpo */}
           <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
+
+            {/* Indicador de etapas */}
+            <StepIndicator status={status} />
+
             {/* Job ID */}
             <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
               <Typography
                 variant="caption"
                 sx={{
-                  display: 'block',
-                  mb: 0.5,
+                  display: 'block', mb: 0.5,
                   color: '#A1A1AA',
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
@@ -360,8 +474,7 @@ export default function UploadPage() {
                   fontSize: { xs: '0.72rem', sm: '0.78rem' },
                   color: '#71717A',
                   bgcolor: '#F4F4F5',
-                  px: 1.5,
-                  py: 0.75,
+                  px: 1.5, py: 0.75,
                   borderRadius: '6px',
                   wordBreak: 'break-all',
                 }}
@@ -369,26 +482,6 @@ export default function UploadPage() {
                 {jobId}
               </Typography>
             </Box>
-
-            {/* Progress bar */}
-            {(status === 'processing' || status === 'pending') && (
-              <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
-                <LinearProgress
-                  sx={{
-                    height: 4,
-                    borderRadius: 2,
-                    bgcolor: '#F4F4F5',
-                    '& .MuiLinearProgress-bar': { bgcolor: '#F97316', borderRadius: 2 },
-                  }}
-                />
-                <Typography
-                  variant="body2"
-                  sx={{ mt: 1.5, color: '#71717A', fontSize: { xs: '0.8rem', sm: '0.8125rem' } }}
-                >
-                  Convertendo seu documento, aguarde...
-                </Typography>
-              </Box>
-            )}
 
             {/* Alert sucesso */}
             {status === 'done' && (
@@ -436,7 +529,7 @@ export default function UploadPage() {
                 fullWidth
                 sx={{
                   py: { xs: 1.25, sm: 1.5 },
-                  fontSize: { xs: '0.875rem', sm: '0.875rem' },
+                  fontSize: '0.875rem',
                   borderColor: '#FECACA',
                   color: '#DC2626',
                   borderRadius: '10px',
@@ -474,7 +567,7 @@ export default function UploadPage() {
                   fullWidth
                   sx={{
                     py: { xs: 1.25, sm: 1.5 },
-                    fontSize: { xs: '0.875rem', sm: '0.875rem' },
+                    fontSize: '0.875rem',
                     borderColor: '#E4E4E7',
                     color: '#18181B',
                     borderRadius: '10px',
