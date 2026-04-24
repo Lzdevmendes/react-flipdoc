@@ -18,7 +18,7 @@ interface DropZoneProps {
 const FORMATS = ['PDF', 'DOCX', 'DOC', 'TXT', 'MD']
 
 export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
-  const { ref, file, setFile, over } = useDragAndDrop()
+  const { ref, setFile, over } = useDragAndDrop(onFile)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
