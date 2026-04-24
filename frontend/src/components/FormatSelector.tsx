@@ -1,7 +1,6 @@
-import React from 'react'
 import { Box, Typography } from '@mui/material'
 
-export type TargetFormat = 'pdf' | 'docx' | 'md' | 'txt'
+export type TargetFormat = 'pdf' | 'docx' | 'md' | 'txt' | 'odt'
 
 interface FormatOption {
   value: TargetFormat
@@ -17,6 +16,7 @@ const formatOptions: FormatOption[] = [
   { value: 'docx', label: 'Word',     ext: '.docx', desc: 'Microsoft Word',    accent: '#2563EB', bg: '#EFF6FF' },
   { value: 'md',   label: 'Markdown', ext: '.md',   desc: 'Texto formatado',   accent: '#7C3AED', bg: '#F5F3FF' },
   { value: 'txt',  label: 'Texto',    ext: '.txt',  desc: 'Texto simples',     accent: '#059669', bg: '#ECFDF5' },
+  { value: 'odt',  label: 'ODT',      ext: '.odt',  desc: 'Open Document',     accent: '#D97706', bg: '#FFFBEB' },
 ]
 
 interface FormatSelectorProps {
@@ -30,7 +30,7 @@ export default function FormatSelector({ value, onChange, disabled = false }: Fo
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
         gap: { xs: 1, sm: 1.5 },
       }}
       role="radiogroup"
