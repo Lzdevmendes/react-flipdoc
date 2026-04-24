@@ -81,6 +81,14 @@ input, select, textarea {
   animation: fadeIn 0.3s ease-in;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Safe area para dispositivos com notch (iPhone X+) */
 @supports (padding: max(0px)) {
   .safe-area-pb {
