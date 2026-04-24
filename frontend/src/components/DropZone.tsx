@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState, useCallback } from 'react'
 import {
   Typography,
   Button,
@@ -7,7 +7,7 @@ import {
   Stack,
   CircularProgress,
 } from '@mui/material'
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material'
+import { CloudUpload as CloudUploadIcon, ErrorOutline as ErrorOutlineIcon } from '@mui/icons-material'
 import { useDragAndDrop } from '../hooks/useDragAndDrop'
 
 interface DropZoneProps {
@@ -15,151 +15,188 @@ interface DropZoneProps {
   disabled?: boolean
 }
 
-const FORMATS = ['PDF', 'DOCX', 'DOC', 'TXT', 'MD']
+const FORMATS = ['PDF', 'DOCX', 'DOC', 'TXT', 'MD', 'ODT']
+const ALLOWED_EXTS = ['pdf', 'docx', 'doc', 'txt', 'md', 'odt']
+const MAX_FILE_MB = 50
+
+function validateFile(f: File): string | null {
+  const ext = f.name.split('.').pop()?.toLowerCase() || ''
+  if (!ALLOWED_EXTS.includes(ext)) {
+    return `Formato .${ext} não suportado. Use: ${ALLOWED_EXTS.map(e => `.${e}`).join(', ')}`
+  }
+  if (f.size > MAX_FILE_MB * 1024 * 1024) {
+    return `Arquivo muito grande. Tamanho máximo: ${MAX_FILE_MB} MB`
+  }
+  return null
+}
 
 export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
-  const { ref, setFile, over } = useDragAndDrop(onFile)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
+
+  const handleFile = useCallback((f: File) => {
+    const err = validateFile(f)
+    if (err) {
+      setValidationError(err)
+      return
+    }
+    setValidationError(null)
+    onFile(f)
+  }, [onFile])
+
+  const { ref, setFile, over } = useDragAndDrop(handleFile)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled) return
     const f = e.target.files?.[0]
     if (f) {
       setFile(f)
-      onFile(f)
+      handleFile(f)
     }
   }
 
   return (
-    <Box
-      ref={ref}
-      onClick={() => !disabled && inputRef.current?.click()}
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      aria-label="Área de upload — clique ou arraste um arquivo"
-      onKeyDown={(e) => {
-        if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault()
-          inputRef.current?.click()
-        }
-      }}
-      sx={{
-        border: '1.5px dashed',
-        borderColor: disabled ? '#D4D4D8' : over ? '#F97316' : '#D4D4D8',
-        borderRadius: '14px',
-        p: { xs: 4, sm: 5, md: 7 },
-        bgcolor: disabled ? '#F4F4F5' : over ? '#FFF7ED' : '#FFFFFF',
-        transition: 'all 0.2s ease',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        textAlign: 'center',
-        opacity: disabled ? 0.65 : 1,
-        outline: 'none',
-        '&:focus-visible': {
-          boxShadow: '0 0 0 3px rgba(249, 115, 22, 0.3)',
-        },
-        '&:hover': !disabled
-          ? { borderColor: '#A1A1AA', bgcolor: '#FAFAF9' }
-          : {},
-      }}
-    >
-      <Stack spacing={{ xs: 2, sm: 3 }} alignItems="center">
-        {/* Ícone */}
-        <Box
-          sx={{
-            width: { xs: 44, sm: 50, md: 56 },
-            height: { xs: 44, sm: 50, md: 56 },
-            borderRadius: '14px',
-            bgcolor: over && !disabled ? '#FFF7ED' : '#F4F4F5',
-            border: '1px solid',
-            borderColor: over && !disabled ? '#FED7AA' : '#E4E4E7',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s ease',
-            flexShrink: 0,
-          }}
-        >
-          {disabled ? (
-            <CircularProgress size={22} sx={{ color: '#A1A1AA' }} />
-          ) : (
-            <CloudUploadIcon
-              sx={{
-                fontSize: { xs: 22, md: 26 },
-                color: over ? '#F97316' : '#A1A1AA',
-                transition: 'color 0.2s ease',
-              }}
-            />
-          )}
-        </Box>
-
-        {/* Texto */}
-        <Box>
-          <Typography
-            variant="body1"
-            sx={{ fontWeight: 600, color: '#18181B', mb: 0.5, fontSize: { xs: '0.9rem', md: '0.9375rem' } }}
-          >
-            {disabled ? 'Enviando arquivo...' : 'Solte seu documento aqui'}
-          </Typography>
-          {!disabled && (
-            <Typography variant="body2" sx={{ color: '#71717A', fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
-              ou clique para selecionar
-            </Typography>
-          )}
-        </Box>
-
-        {/* Botão */}
-        {!disabled && (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<CloudUploadIcon sx={{ fontSize: 15 }} />}
-            onClick={(e) => {
-              e.stopPropagation()
-              inputRef.current?.click()
-            }}
+    <Box>
+      <Box
+        ref={ref}
+        onClick={() => !disabled && inputRef.current?.click()}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-label="Área de upload — clique ou arraste um arquivo"
+        onKeyDown={(e) => {
+          if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault()
+            inputRef.current?.click()
+          }
+        }}
+        sx={{
+          border: '1.5px dashed',
+          borderColor: disabled ? '#D4D4D8' : validationError ? '#DC2626' : over ? '#F97316' : '#D4D4D8',
+          borderRadius: '14px',
+          p: { xs: 4, sm: 5, md: 7 },
+          bgcolor: disabled ? '#F4F4F5' : validationError ? '#FEF2F2' : over ? '#FFF7ED' : '#FFFFFF',
+          transition: 'all 0.2s ease',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          textAlign: 'center',
+          opacity: disabled ? 0.65 : 1,
+          outline: 'none',
+          '&:focus-visible': {
+            boxShadow: '0 0 0 3px rgba(249, 115, 22, 0.3)',
+          },
+          '&:hover': !disabled
+            ? { borderColor: validationError ? '#DC2626' : '#A1A1AA', bgcolor: validationError ? '#FEF2F2' : '#FAFAF9' }
+            : {},
+        }}
+      >
+        <Stack spacing={{ xs: 2, sm: 3 }} alignItems="center">
+          <Box
             sx={{
-              borderColor: '#E4E4E7',
-              color: '#18181B',
-              fontSize: { xs: '0.8rem', sm: '0.8125rem' },
-              px: { xs: 2, sm: 2.5 },
-              py: 0.875,
-              '&:hover': { borderColor: '#A1A1AA', bgcolor: '#F4F4F5' },
+              width: { xs: 44, sm: 50, md: 56 },
+              height: { xs: 44, sm: 50, md: 56 },
+              borderRadius: '14px',
+              bgcolor: over && !disabled ? '#FFF7ED' : '#F4F4F5',
+              border: '1px solid',
+              borderColor: over && !disabled ? '#FED7AA' : '#E4E4E7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              flexShrink: 0,
             }}
           >
-            Selecionar arquivo
-          </Button>
-        )}
+            {disabled ? (
+              <CircularProgress size={22} sx={{ color: '#A1A1AA' }} />
+            ) : (
+              <CloudUploadIcon
+                sx={{
+                  fontSize: { xs: 22, md: 26 },
+                  color: over ? '#F97316' : '#A1A1AA',
+                  transition: 'color 0.2s ease',
+                }}
+              />
+            )}
+          </Box>
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".doc,.docx,.pdf,.md,.txt"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-          disabled={disabled}
-        />
+          <Box>
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 600, color: '#18181B', mb: 0.5, fontSize: { xs: '0.9rem', md: '0.9375rem' } }}
+            >
+              {disabled ? 'Enviando arquivo...' : 'Solte seu documento aqui'}
+            </Typography>
+            {!disabled && (
+              <Typography variant="body2" sx={{ color: '#71717A', fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
+                ou clique para selecionar
+              </Typography>
+            )}
+          </Box>
 
-        {/* Formatos suportados */}
-        <Stack direction="row" spacing={0.75} flexWrap="wrap" justifyContent="center">
-          {FORMATS.map((fmt) => (
-            <Chip
-              key={fmt}
-              label={fmt}
-              size="small"
+          {!disabled && (
+            <Button
               variant="outlined"
-              sx={{
-                height: 20,
-                fontSize: '0.68rem',
-                fontFamily: '"JetBrains Mono", monospace',
-                borderColor: '#E4E4E7',
-                color: '#71717A',
-                fontWeight: 500,
-                mb: 0.5,
+              size="small"
+              startIcon={<CloudUploadIcon sx={{ fontSize: 15 }} />}
+              onClick={(e) => {
+                e.stopPropagation()
+                inputRef.current?.click()
               }}
-            />
-          ))}
+              sx={{
+                borderColor: '#E4E4E7',
+                color: '#18181B',
+                fontSize: { xs: '0.8rem', sm: '0.8125rem' },
+                px: { xs: 2, sm: 2.5 },
+                py: 0.875,
+                '&:hover': { borderColor: '#A1A1AA', bgcolor: '#F4F4F5' },
+              }}
+            >
+              Selecionar arquivo
+            </Button>
+          )}
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".doc,.docx,.pdf,.md,.txt,.odt"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+            disabled={disabled}
+          />
+
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" justifyContent="center">
+            {FORMATS.map((fmt) => (
+              <Chip
+                key={fmt}
+                label={fmt}
+                size="small"
+                variant="outlined"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  fontFamily: '"JetBrains Mono", monospace',
+                  borderColor: '#E4E4E7',
+                  color: '#71717A',
+                  fontWeight: 500,
+                  mb: 0.5,
+                }}
+              />
+            ))}
+          </Stack>
         </Stack>
-      </Stack>
+      </Box>
+
+      {validationError && (
+        <Stack
+          direction="row"
+          spacing={0.75}
+          alignItems="flex-start"
+          sx={{ mt: 1.25, px: 0.5 }}
+        >
+          <ErrorOutlineIcon sx={{ fontSize: 15, color: '#DC2626', mt: '1px', flexShrink: 0 }} />
+          <Typography sx={{ fontSize: '0.8rem', color: '#DC2626', lineHeight: 1.4 }}>
+            {validationError}
+          </Typography>
+        </Stack>
+      )}
     </Box>
   )
 }
