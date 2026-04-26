@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useSnackbar } from 'notistack'
 import { JobStatus } from '../constants/formats'
+import { queryClient } from '../main'
 
 export type { JobStatus }
 
@@ -61,12 +62,14 @@ export function useConversion() {
       // Mostrar toast apenas quando o status mudar para done ou failed
       if (previousStatus !== 'done' && body.status === 'done') {
         enqueueSnackbar('Conversão concluída! Arquivo pronto para download.', { variant: 'success' })
+        queryClient.invalidateQueries({ queryKey: ['jobs'] })
       }
 
       if (previousStatus !== 'failed' && body.status === 'failed') {
         const errorMessage = body.error || 'Erro ao processar conversão'
         setError(errorMessage)
         enqueueSnackbar(errorMessage, { variant: 'error' })
+        queryClient.invalidateQueries({ queryKey: ['jobs'] })
       }
 
       return body
