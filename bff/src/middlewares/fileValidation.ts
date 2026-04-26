@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import path from 'path'
 
-// Configurações de validação
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB em bytes
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const MIN_FILE_SIZE = 100 // 100 bytes
 
 // MIME types permitidos
