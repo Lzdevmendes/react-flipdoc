@@ -13,6 +13,7 @@ import {
 import { Upload as UploadIcon, History as HistoryIcon } from '@mui/icons-material'
 import UploadPage from './pages/UploadPage'
 import HistoryPage from './pages/HistoryPage'
+import ErrorBoundary from './components/ErrorBoundary'
 
 function Navigation() {
   const location = useLocation()
@@ -138,10 +139,12 @@ export default function App() {
             flex: 1,
           }}
         >
-          <Routes>
-            <Route path="/" element={<UploadPage />} />
-            <Route path="/history" element={<HistoryPage />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<UploadPage />} />
+              <Route path="/history" element={<HistoryPage />} />
+            </Routes>
+          </ErrorBoundary>
         </Container>
       </Box>
     </BrowserRouter>
