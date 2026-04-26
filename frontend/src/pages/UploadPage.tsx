@@ -22,29 +22,8 @@ import DropZone from '../components/DropZone'
 import FormatSelector, { TargetFormat } from '../components/FormatSelector'
 import { useConversion } from '../hooks/useConversion'
 import { usePolling } from '../hooks/usePolling'
-
-const formatColors: Record<string, string> = {
-  pdf:  '#DC2626',
-  docx: '#2563EB',
-  doc:  '#2563EB',
-  md:   '#7C3AED',
-  txt:  '#059669',
-  odt:  '#D97706',
-}
-
-function getExt(filename: string) {
-  return filename.split('.').pop()?.toLowerCase() || ''
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-// ── Indicador de etapas ───────────────────────────────────────────────────────
-
-type JobStatus = 'pending' | 'processing' | 'done' | 'failed'
+import { FORMAT_COLORS, JobStatus } from '../constants/formats'
+import { formatBytes, getFileExt } from '../utils/format'
 
 function StepIndicator({ status }: { status: JobStatus | null }) {
   const steps = [
@@ -138,7 +117,7 @@ function StepIndicator({ status }: { status: JobStatus | null }) {
 // ── Badge de formato ──────────────────────────────────────────────────────────
 
 function FileFormatBadge({ label, ext }: { label: string; ext: string }) {
-  const color = formatColors[ext] || '#6B7280'
+  const color = FORMAT_COLORS[ext] || '#6B7280'
   return (
     <Box
       sx={{
@@ -201,7 +180,7 @@ export default function UploadPage() {
   const handleReset         = () => setSelectedFile(null)
   const handleNewConversion = () => { reset(); setSelectedFile(null) }
 
-  const srcExt   = selectedFile ? getExt(selectedFile.name) : ''
+  const srcExt   = selectedFile ? getFileExt(selectedFile.name) : ''
   const srcLabel = srcExt.toUpperCase()
 
   return (
@@ -283,9 +262,9 @@ export default function UploadPage() {
                   width: 7,
                   height: 7,
                   borderRadius: '50%',
-                  bgcolor: formatColors[srcExt] || '#A1A1AA',
+                  bgcolor: FORMAT_COLORS[srcExt] || '#A1A1AA',
                   flexShrink: 0,
-                  boxShadow: `0 0 0 3px ${(formatColors[srcExt] || '#A1A1AA')}22`,
+                  boxShadow: `0 0 0 3px ${(FORMAT_COLORS[srcExt] || '#A1A1AA')}22`,
                 }}
               />
               <Typography

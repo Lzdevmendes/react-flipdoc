@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react'
 import { useSnackbar } from 'notistack'
+import { JobStatus } from '../constants/formats'
 
-export type JobStatus = 'pending' | 'processing' | 'done' | 'failed'
+export type { JobStatus }
 
 export function useConversion() {
   const [jobId, setJobId] = useState<string | null>(null)
@@ -10,7 +11,7 @@ export function useConversion() {
   const [isUploading, setIsUploading] = useState(false)
   const { enqueueSnackbar } = useSnackbar()
 
-  const startConversion = useCallback(async (file: File, target: 'pdf' | 'docx' | 'md' | 'txt') => {
+  const startConversion = useCallback(async (file: File, target: 'pdf' | 'docx' | 'md' | 'txt' | 'odt') => {
     setError(null)
     setIsUploading(true)
 

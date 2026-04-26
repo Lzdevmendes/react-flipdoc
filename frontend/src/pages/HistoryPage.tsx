@@ -35,8 +35,7 @@ import {
   Schedule as PendingIcon,
 } from '@mui/icons-material'
 import axios from 'axios'
-
-type JobStatus = 'pending' | 'processing' | 'done' | 'failed'
+import { FORMAT_COLORS, STATUS_CONFIG, JobStatus } from '../constants/formats'
 
 interface Job {
   id: string
@@ -59,21 +58,6 @@ async function fetchJobs(limit: number, offset: number): Promise<JobsResponse> {
   return response.data
 }
 
-const statusConfig = {
-  pending:    { label: 'Pendente',    bg: '#F4F4F5', color: '#71717A' },
-  processing: { label: 'Processando', bg: '#EFF6FF', color: '#2563EB' },
-  done:       { label: 'Concluído',   bg: '#DCFCE7', color: '#15803D' },
-  failed:     { label: 'Falhou',      bg: '#FEE2E2', color: '#DC2626' },
-}
-
-const formatColors: Record<string, string> = {
-  pdf:  '#DC2626',
-  docx: '#2563EB',
-  doc:  '#2563EB',
-  md:   '#7C3AED',
-  txt:  '#059669',
-}
-
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr)
   const now  = new Date()
@@ -86,7 +70,7 @@ function formatRelativeDate(dateStr: string): string {
 }
 
 function StatusBadge({ status }: { status: JobStatus }) {
-  const cfg = statusConfig[status]
+  const cfg = STATUS_CONFIG[status]
   return (
     <Chip
       label={cfg.label}
@@ -106,7 +90,7 @@ function StatusBadge({ status }: { status: JobStatus }) {
 }
 
 function FormatBadge({ format }: { format: string }) {
-  const color = formatColors[format.toLowerCase()] || '#6B7280'
+  const color = FORMAT_COLORS[format.toLowerCase()] || '#6B7280'
   return (
     <Chip
       label={format.toUpperCase()}
@@ -176,7 +160,7 @@ function StatsRow({ jobs }: { jobs: Job[] }) {
 // ── Card mobile ───────────────────────────────────────────────────────────────
 
 function JobCard({ job }: { job: Job }) {
-  const color = formatColors[job.target_format.toLowerCase()] || '#6B7280'
+  const color = FORMAT_COLORS[job.target_format.toLowerCase()] || '#6B7280'
 
   return (
     <Paper
