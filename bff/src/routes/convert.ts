@@ -28,9 +28,13 @@ pool.query('SELECT NOW()')
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads')
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true })
 
+function sanitizeFilename(name: string): string {
+  return path.basename(name).replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200)
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${sanitizeFilename(file.originalname)}`),
 })
 const upload = multer({ storage })
 const router = express.Router()
