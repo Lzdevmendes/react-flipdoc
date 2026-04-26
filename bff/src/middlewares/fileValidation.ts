@@ -141,29 +141,5 @@ export function validateFile(req: Request, res: Response, next: NextFunction) {
     })
   }
 
-  // Se passou em todas validações, continuar
-  console.log(`✅ Arquivo validado: ${file.originalname} (${(file.size / 1024).toFixed(1)}KB)`)
-  next()
-}
-
-/**
- * Middleware para validar múltiplos arquivos (uso futuro)
- */
-export function validateFiles(req: Request, res: Response, next: NextFunction) {
-  if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
-    return res.status(400).json({
-      error: 'No files provided',
-      message: 'Por favor, selecione pelo menos um arquivo.'
-    })
-  }
-
-  // Validar cada arquivo individualmente
-  const files = Array.isArray(req.files) ? req.files : Object.values(req.files).flat()
-
-  for (const file of files) {
-    req.file = file as Express.Multer.File
-    validateFile(req, res, () => {})
-  }
-
   next()
 }

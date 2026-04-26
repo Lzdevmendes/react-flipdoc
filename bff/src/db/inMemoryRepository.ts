@@ -1,9 +1,5 @@
 import { Job, CreateJobDto, UpdateJobDto } from './jobsRepository'
 
-/**
- * Repositório em memória para desenvolvimento sem PostgreSQL
- * ⚠️ ATENÇÃO: Dados serão perdidos ao reiniciar o servidor
- */
 class InMemoryJobsRepository {
   private jobs = new Map<string, Job>()
 
@@ -23,7 +19,6 @@ class InMemoryJobsRepository {
     }
 
     this.jobs.set(job.id, job)
-    console.log(`📝 [IN-MEMORY] Job criado: ${job.id}`)
     return job
   }
 
@@ -49,7 +44,6 @@ class InMemoryJobsRepository {
     }
 
     this.jobs.set(id, updatedJob)
-    console.log(`✏️ [IN-MEMORY] Job atualizado: ${id} - status: ${updatedJob.status}`)
     return updatedJob
   }
 
@@ -61,10 +55,7 @@ class InMemoryJobsRepository {
     return this.jobs.size
   }
 
-  // Método para debug
-  getAll(): Job[] {
-    return Array.from(this.jobs.values())
-  }
+
 }
 
 export const inMemoryJobsRepository = new InMemoryJobsRepository()
