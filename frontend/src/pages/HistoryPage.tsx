@@ -36,6 +36,7 @@ import {
 } from '@mui/icons-material'
 import axios from 'axios'
 import { FORMAT_COLORS, STATUS_CONFIG, JobStatus } from '../constants/formats'
+import { formatRelativeDate } from '../utils/format'
 
 interface Job {
   id: string
@@ -58,16 +59,6 @@ async function fetchJobs(limit: number, offset: number): Promise<JobsResponse> {
   return response.data
 }
 
-function formatRelativeDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  const now  = new Date()
-  const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (diff < 60)    return 'agora mesmo'
-  if (diff < 3600)  return `há ${Math.floor(diff / 60)}min`
-  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
-  return date.toLocaleDateString('pt-BR')
-}
 
 function StatusBadge({ status }: { status: JobStatus }) {
   const cfg = STATUS_CONFIG[status]
