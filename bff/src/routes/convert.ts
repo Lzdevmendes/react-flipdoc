@@ -90,8 +90,10 @@ router.get('/jobs/:id/status', async (req, res) => {
 
 router.get('/jobs', async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 100
-    const offset = parseInt(req.query.offset as string) || 0
+    const rawLimit = parseInt(req.query.limit as string)
+    const rawOffset = parseInt(req.query.offset as string)
+    const limit = !isNaN(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 500) : 100
+    const offset = !isNaN(rawOffset) && rawOffset >= 0 ? rawOffset : 0
 
     const repo = getRepository()
     const jobs = await repo.findAll(limit, offset)
