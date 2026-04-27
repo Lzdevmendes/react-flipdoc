@@ -112,6 +112,7 @@ router.get('/jobs/:id/download', async (req, res) => {
     if (!job) return res.status(404).send('Job not found')
     if (job.status !== 'done') return res.status(400).send('Not completed')
     if (!job.download_path || !job.download_name) return res.status(500).send('File unavailable')
+    if (!fs.existsSync(job.download_path)) return res.status(404).send('File not found on disk')
 
     return res.download(job.download_path, job.download_name)
   } catch (error) {
