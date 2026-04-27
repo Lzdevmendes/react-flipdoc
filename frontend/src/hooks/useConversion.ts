@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useSnackbar } from 'notistack'
 import { JobStatus } from '../constants/formats'
-import { queryClient } from '../main'
+import { queryClient } from '../lib/queryClient'
 
 export type { JobStatus }
 
