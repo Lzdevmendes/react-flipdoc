@@ -36,7 +36,7 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => cb(null, `${Date.now()}-${sanitizeFilename(file.originalname)}`),
 })
-const upload = multer({ storage })
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } })
 const router = express.Router()
 
 router.post('/convert', upload.single('file'), validateFile, async (req, res) => {
