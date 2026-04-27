@@ -34,3 +34,7 @@ coverage
 
 # Misc
 nul
+
+# Upload and conversion artifacts
+bff/uploads/
+bff/storage/
