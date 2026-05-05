@@ -8,9 +8,11 @@ export function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr)
   const diff = Math.floor((Date.now() - date.getTime()) / 1000)
 
-  if (diff < 60)    return 'agora mesmo'
-  if (diff < 3600)  return `há ${Math.floor(diff / 60)}min`
-  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
+  if (diff < 60)      return 'agora mesmo'
+  if (diff < 3600)    return `há ${Math.floor(diff / 60)}min`
+  if (diff < 86400)   return `há ${Math.floor(diff / 3600)}h`
+  if (diff < 172800)  return 'há 1 dia'
+  if (diff < 604800)  return `há ${Math.floor(diff / 86400)} dias`
   return date.toLocaleDateString('pt-BR')
 }
 
