@@ -311,10 +311,9 @@ export default function HistoryPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['jobs', page, rowsPerPage],
     queryFn: () => fetchJobs(rowsPerPage, page * rowsPerPage),
-    refetchInterval: (query) => {
-      const jobs = (query.state.data as JobsResponse | undefined)?.jobs
-      if (!jobs) return 5000
-      return jobs.some((j) => j.status === 'pending' || j.status === 'processing') ? 5000 : false
+    refetchInterval: (data) => {
+      if (!data?.jobs) return 5000
+      return data.jobs.some((j) => j.status === 'pending' || j.status === 'processing') ? 5000 : false
     },
   })
 
