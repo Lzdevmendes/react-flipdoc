@@ -306,6 +306,8 @@ export default function HistoryPage() {
   const [orderBy, setOrderBy]         = useState<'created_at' | 'original_name'>('created_at')
   const [order, setOrder]             = useState<'asc' | 'desc'>('desc')
 
+  React.useEffect(() => { setPage(0) }, [searchQuery, statusFilter])
+
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['jobs', page, rowsPerPage],
     queryFn: () => fetchJobs(rowsPerPage, page * rowsPerPage),
@@ -337,6 +339,7 @@ export default function HistoryPage() {
     const isAsc = orderBy === column && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
     setOrderBy(column)
+    setPage(0)
   }
 
   return (
