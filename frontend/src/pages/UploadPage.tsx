@@ -22,7 +22,7 @@ import DropZone from '../components/DropZone'
 import FormatSelector, { TargetFormat } from '../components/FormatSelector'
 import { useConversion } from '../hooks/useConversion'
 import { usePolling } from '../hooks/usePolling'
-import { FORMAT_COLORS, JobStatus } from '../constants/formats'
+import { FORMAT_COLORS, STATUS_CONFIG, JobStatus } from '../constants/formats'
 import { formatBytes, getFileExt } from '../utils/format'
 
 function StepIndicator({ status }: { status: JobStatus | null }) {
@@ -460,7 +460,7 @@ export default function UploadPage() {
             </Stack>
 
             <Chip
-              label={status}
+              label={status ? STATUS_CONFIG[status].label : ''}
               size="small"
               sx={{
                 fontFamily: '"JetBrains Mono", monospace',
