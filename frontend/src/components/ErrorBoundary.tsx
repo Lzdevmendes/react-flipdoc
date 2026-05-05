@@ -56,14 +56,24 @@ export default class ErrorBoundary extends React.Component<Props, State> {
           <Typography variant="body2" sx={{ color: '#71717A', maxWidth: 360 }}>
             {this.state.error.message}
           </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => this.setState({ error: null })}
-            sx={{ borderColor: '#E4E4E7', color: '#18181B', borderRadius: '10px' }}
-          >
-            Tentar novamente
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => this.setState({ error: null })}
+              sx={{ borderColor: '#E4E4E7', color: '#18181B', borderRadius: '10px' }}
+            >
+              Tentar novamente
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => window.location.reload()}
+              sx={{ bgcolor: '#1A1A2E', borderRadius: '10px', '&:hover': { bgcolor: '#2D2D44' } }}
+            >
+              Recarregar página
+            </Button>
+          </Box>
         </Box>
       )
     }
