@@ -65,12 +65,13 @@ async function processJob(jobId: string): Promise<void> {
     console.log(`✅ [${jobId}] Conversão concluída: ${outputName}`)
     console.log(`📥 Download: /api/jobs/${jobId}/download\n`)
 
-  } catch (err: any) {
-    console.error(`❌ [${jobId}] Erro: ${err.message}`)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erro desconhecido'
+    console.error(`❌ [${jobId}] Erro: ${message}`)
 
     await repo.update(jobId, {
       status: 'failed',
-      error_message: err.message || 'Erro desconhecido'
+      error_message: message,
     })
   }
 }

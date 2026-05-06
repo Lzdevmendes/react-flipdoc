@@ -68,23 +68,24 @@ async function runConversion(jobId: string, retries: number = 0): Promise<void> 
 
     console.log(`✅ [${jobId}] Conversão concluída: ${outputName}`)
 
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erro desconhecido'
     const newRetries = retries + 1
-    console.error(`❌ [${jobId}] Erro: ${err.message} (tentativa ${newRetries}/${MAX_RETRIES})`)
+    console.error(`❌ [${jobId}] Erro: ${message} (tentativa ${newRetries}/${MAX_RETRIES})`)
 
     if (newRetries < MAX_RETRIES) {
       // Reinserir na fila para retry
       await redis.lpush(QUEUE_KEY, JSON.stringify({ jobId, retries: newRetries }))
       await jobsRepository.update(jobId, {
         status: 'pending',
-        error_message: `Tentativa ${newRetries}: ${err.message}`
+        error_message: `Tentativa ${newRetries}: ${message}`
       })
       console.log(`🔄 [${jobId}] Reenfileirado para retry`)
     } else {
       // Falhou definitivamente
       await jobsRepository.update(jobId, {
         status: 'failed',
-        error_message: `Falhou após ${MAX_RETRIES} tentativas: ${err.message}`
+        error_message: `Falhou após ${MAX_RETRIES} tentativas: ${message}`
       })
       console.log(`🚫 [${jobId}] Falhou definitivamente após ${MAX_RETRIES} tentativas`)
     }
