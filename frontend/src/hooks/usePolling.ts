@@ -9,7 +9,7 @@ export function usePolling(fn: () => Promise<void> | void, intervalMs = 2000, ac
     let mounted = true
     async function tick() {
       if (!mounted) return
-      try { await fnRef.current() } catch (e) { /* ignore */ }
+      try { await fnRef.current() } catch (e) { console.warn('[usePolling] erro no tick:', e) }
       if (mounted) timerRef.current = window.setTimeout(tick, intervalMs)
     }
     if (active) tick()
