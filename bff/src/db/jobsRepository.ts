@@ -91,7 +91,7 @@ export class JobsRepository {
   async update(id: string, data: UpdateJobDto): Promise<Job | null> {
     // Construir query dinâmica baseada nos campos fornecidos
     const fields: string[] = []
-    const values: any[] = []
+    const values: (string | undefined)[] = []
     let paramIndex = 1
 
     if (data.status !== undefined) {
