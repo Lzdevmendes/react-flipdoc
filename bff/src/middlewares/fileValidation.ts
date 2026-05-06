@@ -31,7 +31,7 @@ const ALLOWED_EXTENSIONS = [
 interface ValidationError {
   field: string
   message: string
-  details?: any
+  details?: Record<string, unknown>
 }
 
 /**
