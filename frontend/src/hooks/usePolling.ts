@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export function usePolling(fn: () => Promise<any> | void, intervalMs = 2000, active = true) {
+export function usePolling(fn: () => Promise<void> | void, intervalMs = 2000, active = true) {
   const timerRef = useRef<number | null>(null)
   const fnRef = useRef(fn)
   fnRef.current = fn
