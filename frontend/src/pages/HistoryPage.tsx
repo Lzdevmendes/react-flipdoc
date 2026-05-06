@@ -152,7 +152,7 @@ const StatsRow = React.memo(function StatsRow({ jobs }: { jobs: Job[] }) {
 
 // ── Card mobile ───────────────────────────────────────────────────────────────
 
-function JobCard({ job }: { job: Job }) {
+const JobCard = React.memo(function JobCard({ job }: { job: Job }) {
   const color = FORMAT_COLORS[job.target_format.toLowerCase()] || '#6B7280'
 
   return (
@@ -249,7 +249,7 @@ function JobCard({ job }: { job: Job }) {
       )}
     </Paper>
   )
-}
+})
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
