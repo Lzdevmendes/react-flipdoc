@@ -143,7 +143,7 @@ export async function pdfToDocx(inputPath: string, outputPath: string): Promise<
 export async function extractPdfMetadata(inputPath: string): Promise<{
   pages: number
   text: string
-  info: any
+  info: Record<string, unknown>
 }> {
   const dataBuffer = fs.readFileSync(inputPath)
   const data = await pdf(dataBuffer)
