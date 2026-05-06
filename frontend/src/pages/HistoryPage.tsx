@@ -60,7 +60,7 @@ async function fetchJobs(limit: number, offset: number): Promise<JobsResponse> {
 }
 
 
-function StatusBadge({ status }: { status: JobStatus }) {
+const StatusBadge = React.memo(function StatusBadge({ status }: { status: JobStatus }) {
   const cfg = STATUS_CONFIG[status]
   return (
     <Chip
@@ -78,9 +78,9 @@ function StatusBadge({ status }: { status: JobStatus }) {
       }}
     />
   )
-}
+})
 
-function FormatBadge({ format }: { format: string }) {
+const FormatBadge = React.memo(function FormatBadge({ format }: { format: string }) {
   const color = FORMAT_COLORS[format.toLowerCase()] || '#6B7280'
   return (
     <Chip
@@ -98,7 +98,7 @@ function FormatBadge({ format }: { format: string }) {
       }}
     />
   )
-}
+})
 
 // ── Stats resumo ──────────────────────────────────────────────────────────────
 
