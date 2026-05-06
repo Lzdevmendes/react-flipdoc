@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Box,
@@ -102,10 +102,12 @@ const FormatBadge = React.memo(function FormatBadge({ format }: { format: string
 
 // ── Stats resumo ──────────────────────────────────────────────────────────────
 
-function StatsRow({ jobs }: { jobs: Job[] }) {
-  const done    = jobs.filter((j) => j.status === 'done').length
-  const failed  = jobs.filter((j) => j.status === 'failed').length
-  const pending = jobs.filter((j) => j.status === 'pending' || j.status === 'processing').length
+const StatsRow = React.memo(function StatsRow({ jobs }: { jobs: Job[] }) {
+  const { done, failed, pending } = useMemo(() => ({
+    done:    jobs.filter((j) => j.status === 'done').length,
+    failed:  jobs.filter((j) => j.status === 'failed').length,
+    pending: jobs.filter((j) => j.status === 'pending' || j.status === 'processing').length,
+  }), [jobs])
 
   if (jobs.length === 0) return null
 
@@ -146,7 +148,7 @@ function StatsRow({ jobs }: { jobs: Job[] }) {
       )}
     </Stack>
   )
-}
+})
 
 // ── Card mobile ───────────────────────────────────────────────────────────────
 
